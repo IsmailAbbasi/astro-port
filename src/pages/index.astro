@@ -1,0 +1,201 @@
+---
+import { getEmDashCollection, getTermsForEntries } from "emdash";
+import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
+import BlogCard from "../components/BlogCard.astro";
+import ProjectRow from "../components/ProjectRow.astro";
+import TechBadge from "../components/TechBadge.astro";
+import { flag, getProfile } from "../lib/profile";
+import { getReadingTime } from "../lib/format";
+
+const [profileResult, postsResult, projectsResult, stackResult] = await Promise.all([
+	getProfile(),
+	getEmDashCollection("posts", { orderBy: { published_at: "desc" }, limit: 2 }),
+	getEmDashCollection("projects", { orderBy: { published_at: "desc" }, limit: 24 }),
+	getEmDashCollection("stack", { orderBy: { title: "asc" }, limit: 100 }),
+]);
+if (postsResult.error || projectsResult.error || stackResult.error) {
+	return new Response("Could not load the portfolio", { status: 500 });
+}
+if (Astro.cache?.enabled) {
+	Astro.cache.set(profileResult.cacheHint);
+	Astro.cache.set(postsResult.cacheHint);
+	Astro.cache.set(projectsResult.cacheHint);
+	Astro.cache.set(stackResult.cacheHint);
+}
+
+const { profile } = profileResult;
+const posts = postsResult.entries;
+
+// "Show on home page" defaults to on, so only an explicit "off" hides a project.
+const projects = projectsResult.entries.filter((p) => flag(p.data.featured, true));
+// One batched query for every row's technology labels.
+const techByProject = await getTermsForEntries(
+	"projects",
+	projects.map((p) => p.data.id),
+	"tech",
+);
+
+// Group the tech stack into bento cards, in a fixed category order.
+const CATEGORY_ORDER = ["Frontend", "Backend", "Database", "DevOps", "Tools"];
+const groups = new Map<string, typeof stackResult.entries>();
+for (const item of stackResult.entries) {
+	const category = item.data.category || "Other";
+	groups.set(category, [...(groups.get(category) ?? []), item]);
+}
+const stackGroups = [...groups.entries()].sort(
+	([a], [b]) =>
+		(CATEGORY_ORDER.indexOf(a) + 1 || CATEGORY_ORDER.length + 1) -
+		(CATEGORY_ORDER.indexOf(b) + 1 || CATEGORY_ORDER.length + 1),
+);
+---
+
+<Base description={profile?.data.role}>
+	<Hero profile={profile} />
+
+	<section class="section container" aria-labelledby="posts-title">
+		<header class="section-header" data-reveal>
+			<h2 id="posts-title" class="section-title">Latest Posts</h2>
+			<a href="/posts" class="section-link">See all posts →</a>
+		</header>
+		{
+			posts.length > 0 ? (
+				<div class="posts-grid">
+					{posts.map((post, i) => (
+						<BlogCard
+							title={post.data.title}
+							href={`/posts/${post.id}`}
+							date={post.data.publishedAt}
+							excerpt={post.data.excerpt}
+							readingTime={getReadingTime(post.data.content)}
+							edit={post.edit}
+							revealDelay={i * 80}
+						/>
+					))}
+				</div>
+			) : (
+				<p class="empty-state">
+					No posts yet. <a href="/_emdash/admin/content/posts/new">Write the first one</a>.
+				</p>
+			)
+		}
+	</section>
+
+	<section class="section container" aria-labelledby="projects-title">
+		<header class="section-header" data-reveal>
+			<h2 id="projects-title" class="section-title">
+				Selected Projects <span class="section-count">({projects.length})</span>
+			</h2>
+			<a href="/projects" class="section-link">All projects →</a>
+		</header>
+		{
+			projects.length > 0 ? (
+				<ul class="project-list">
+					{projects.map((project, i) => (
+						<ProjectRow
+							title={project.data.title}
+							href={`/projects/${project.id}`}
+							summary={project.data.summary}
+							year={project.data.year}
+							technologies={(techByProject.get(project.data.id) ?? []).map((t) => t.label)}
+							liveUrl={project.data.live_url}
+							githubUrl={project.data.github_url}
+							edit={project.edit}
+							revealDelay={i * 60}
+						/>
+					))}
+				</ul>
+			) : (
+				<p class="empty-state">
+					No projects yet. <a href="/_emdash/admin/content/projects/new">Add a project</a>.
+				</p>
+			)
+		}
+	</section>
+
+	{
+		stackGroups.length > 0 && (
+			<section class="section container" aria-labelledby="stack-title">
+				<header class="section-header" data-reveal>
+					<h2 id="stack-title" class="section-title">
+						Tech Stack
+					</h2>
+				</header>
+				<div class="bento">
+					{stackGroups.map(([category, items], i) => (
+						<div class="bento-card" data-reveal style={`--reveal-delay: ${i * 70}ms`}>
+							<h3 class="bento-title">{category}</h3>
+							<div class="bento-badges">
+								{items.map((item) => (
+									<TechBadge name={item.data.title} simpleIcon={item.data.simple_icon} icon={item.data.icon} />
+								))}
+							</div>
+						</div>
+					))}
+				</div>
+			</section>
+		)
+	}
+</Base>
+
+<style>
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-4);
+	}
+
+	.project-list {
+		list-style: none;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.bento {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-4);
+	}
+
+	/* The first group (usually the largest) spans the full width; an odd last card does too. */
+	.bento-card:first-child,
+	.bento-card:last-child:nth-child(even) {
+		grid-column: 1 / -1;
+	}
+
+	.bento-card {
+		padding: var(--space-5);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		transition: border-color var(--duration);
+	}
+
+	.bento-card:hover {
+		border-color: var(--border-strong);
+	}
+
+	.bento-title {
+		margin-bottom: var(--space-4);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-secondary);
+	}
+
+	.bento-badges {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	@media (max-width: 640px) {
+		.posts-grid,
+		.bento {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>

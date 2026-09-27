@@ -1,0 +1,28 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "astro-port",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2026-02-24",
+	"compatibility_flags": ["nodejs_compat"],
+	// Created automatically on the first `wrangler deploy` if they don't exist yet.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "astro-port",
+		},
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "astro-port-media",
+		},
+	],
+	// Sandboxed plugins require Worker Loader, available on Workers paid plans. Uncomment to enable:
+	// "worker_loaders": [{ "binding": "LOADER" }],
+	// Scheduled publishing + general maintenance
+	"triggers": {
+		"crons": ["* * * * *"],
+	},
+	// Custom domain: uncomment after the first deploy works on *.workers.dev
+	// "routes": [{ "pattern": "yourdomain.com", "custom_domain": true }],
+}

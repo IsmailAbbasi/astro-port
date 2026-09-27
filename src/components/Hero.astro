@@ -1,0 +1,235 @@
+---
+import { PortableText } from "emdash/ui";
+import { DEFAULT_CV_PATH, fileUrl, flag, getProfile, getSocialLinks, safeExternalUrl } from "../lib/profile";
+
+interface Props {
+	profile: Awaited<ReturnType<typeof getProfile>>["profile"];
+}
+
+const { profile } = Astro.props;
+const data = profile?.data;
+
+const name = data?.title || "there";
+const available = flag(data?.available);
+const cvUrl = fileUrl(data?.cv) ?? DEFAULT_CV_PATH;
+const hireUrl = safeExternalUrl(data?.hire_url) ?? (data?.email ? `mailto:${data.email}` : undefined);
+const socials = getSocialLinks(data);
+---
+
+<section class="hero container" aria-labelledby="hero-title">
+	{
+		available && (
+			<p class="hero-status" data-reveal>
+				<span class="status-dot" aria-hidden="true" />
+				Available for work
+			</p>
+		)
+	}
+
+	<h1 id="hero-title" class="hero-title" data-reveal style="--reveal-delay: 60ms">
+		Hi, I'm <span class="hero-name" {...profile?.edit.title}>{name}</span>
+		<span class="wave" aria-hidden="true">👋</span>
+	</h1>
+
+	{
+		data?.role && (
+			<p class="hero-role" data-reveal style="--reveal-delay: 120ms" {...profile?.edit.role}>
+				{data.role}
+			</p>
+		)
+	}
+
+	{
+		data?.bio && data.bio.length > 0 && (
+			<div class="hero-bio" data-reveal style="--reveal-delay: 180ms" {...profile?.edit.bio}>
+				<PortableText value={data.bio} />
+			</div>
+		)
+	}
+
+	<div class="hero-actions" data-reveal style="--reveal-delay: 240ms">
+		<a href={cvUrl} class="btn btn-primary" download>
+			Download CV
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14"></path>
+			</svg>
+		</a>
+		{
+			hireUrl && (
+				<a href={hireUrl} class="btn btn-ghost">
+					Hire Me
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M5 12h14m0 0-6-6m6 6-6 6" />
+					</svg>
+				</a>
+			)
+		}
+	</div>
+
+	{
+		socials.length > 0 && (
+			<ul class="hero-socials" data-reveal style="--reveal-delay: 300ms" aria-label="Social profiles">
+				{socials.map((link) => (
+					<li>
+						<a href={link.href} target="_blank" rel="me noopener noreferrer">
+							{link.label}
+						</a>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</section>
+
+<style>
+	.hero {
+		padding-top: var(--space-8);
+		padding-bottom: var(--space-6);
+	}
+
+	.hero-status {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-5);
+		padding: 0.3rem 0.8rem;
+		font-size: var(--text-xs);
+		font-weight: 500;
+		color: var(--text-secondary);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+	}
+
+	.status-dot {
+		position: relative;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--success);
+	}
+
+	.status-dot::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background: var(--success);
+		animation: ping 2s var(--ease-out) infinite;
+	}
+
+	@keyframes ping {
+		to {
+			transform: scale(2.6);
+			opacity: 0;
+		}
+	}
+
+	.hero-title {
+		font-size: clamp(2.1rem, 6vw, 3rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.hero-name {
+		background: var(--accent-gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.wave {
+		display: inline-block;
+		transform-origin: 70% 70%;
+		animation: wave 2.4s ease-in-out 0.8s 2;
+	}
+
+	@keyframes wave {
+		0%,
+		60%,
+		100% {
+			transform: rotate(0deg);
+		}
+		10%,
+		30% {
+			transform: rotate(14deg);
+		}
+		20% {
+			transform: rotate(-8deg);
+		}
+		40% {
+			transform: rotate(-4deg);
+		}
+		50% {
+			transform: rotate(10deg);
+		}
+	}
+
+	.hero-role {
+		margin-top: var(--space-2);
+		font-size: var(--text-lg);
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	.hero-bio {
+		margin-top: var(--space-5);
+		max-width: 62ch;
+		font-size: var(--text-lg);
+		line-height: 1.75;
+		color: var(--text-secondary);
+	}
+
+	.hero-bio :global(p + p) {
+		margin-top: 1em;
+	}
+
+	/* Highlighted keywords: anything marked bold in the admin */
+	.hero-bio :global(strong) {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	.hero-bio :global(a) {
+		color: var(--text-primary);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		margin-top: var(--space-6);
+	}
+
+	.hero-socials {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-top: var(--space-6);
+		list-style: none;
+		font-size: var(--text-sm);
+	}
+
+	.hero-socials li + li::before {
+		content: "/";
+		margin-inline-end: var(--space-2);
+		color: var(--border-strong);
+	}
+
+	.hero-socials a {
+		color: var(--text-secondary);
+		transition: color var(--duration-fast);
+	}
+
+	.hero-socials a:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 640px) {
+		.hero {
+			padding-top: var(--space-7);
+		}
+	}
+</style>

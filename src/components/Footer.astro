@@ -1,0 +1,48 @@
+---
+interface Props {
+	name: string;
+}
+
+const { name } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+	<div class="container footer-inner">
+		<p>© {year} {name} · Built with <a href="https://astro.build">Astro</a> + <a href="https://emdashcms.com">EmDash</a></p>
+		<a href="/rss.xml" class="footer-rss">RSS</a>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		margin-top: var(--space-7);
+		border-top: 1px solid var(--border);
+	}
+
+	.footer-inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		padding-block: var(--space-6);
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+	}
+
+	.footer-inner a {
+		color: var(--text-primary);
+		transition: color var(--duration-fast);
+	}
+
+	.footer-inner a:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 480px) {
+		.footer-inner {
+			flex-direction: column;
+			text-align: center;
+		}
+	}
+</style>

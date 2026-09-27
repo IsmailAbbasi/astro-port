@@ -1,0 +1,495 @@
+/*
+  global.css -- the design system. Dark-mode first.
+
+  Colours, type and spacing are tokens on :root; components use the
+  tokens, so retheming the site means editing this block only.
+  --font-sans and --font-mono are provided by the Astro Fonts API
+  (see the `fonts` entries in astro.config.mjs).
+*/
+
+:root {
+	color-scheme: dark;
+
+	/* Colours */
+	--bg-primary: hsl(220, 15%, 8%);
+	--bg-card: hsl(220, 15%, 12%);
+	--bg-card-hover: hsl(220, 15%, 16%);
+	--text-primary: hsl(0, 0%, 92%);
+	--text-secondary: hsl(0, 0%, 60%);
+	--accent: hsl(35, 95%, 55%);
+	--accent-strong: hsl(25, 92%, 55%);
+	--accent-gradient: linear-gradient(135deg, hsl(35, 95%, 55%), hsl(15, 90%, 55%));
+	--accent-soft: hsla(35, 95%, 55%, 0.12);
+	--accent-glow: 0 0 0 1px hsla(35, 95%, 55%, 0.35), 0 8px 32px -8px hsla(35, 95%, 55%, 0.35);
+	--on-accent: hsl(220, 15%, 8%);
+	--border: hsl(220, 15%, 18%);
+	--border-strong: hsl(220, 15%, 26%);
+	--success: hsl(145, 63%, 49%);
+
+	/* Typography */
+	--font-body: var(--font-sans), system-ui, -apple-system, sans-serif;
+	--font-code: var(--font-mono), ui-monospace, monospace;
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-xl: 1.375rem;
+	--text-2xl: 1.75rem;
+	--text-3xl: 2.5rem;
+	--leading-tight: 1.15;
+	--leading-snug: 1.35;
+	--leading-body: 1.7;
+
+	/* Spacing */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+	--space-7: 3rem;
+	--space-8: 4.5rem;
+
+	/* Layout */
+	--content-width: 760px;
+	--gutter: 1.25rem;
+	--radius-sm: 6px;
+	--radius: 12px;
+	--radius-pill: 999px;
+
+	/* Motion */
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--duration-fast: 150ms;
+	--duration: 250ms;
+	--duration-slow: 600ms;
+}
+
+/* ---------- Native cross-page view transitions (no client router needed) ---------- */
+
+@view-transition {
+	navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 220ms;
+}
+
+/* ---------- Reset & base ---------- */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	scroll-behavior: smooth;
+}
+
+body {
+	min-height: 100vh;
+	font-family: var(--font-body);
+	font-size: var(--text-base);
+	line-height: var(--leading-body);
+	color: var(--text-primary);
+	background: var(--bg-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow-x: hidden;
+}
+
+/* Soft amber glow at the top of every page */
+body::before {
+	content: "";
+	position: fixed;
+	inset: -30vh 0 auto;
+	height: 70vh;
+	background: radial-gradient(ellipse 60% 50% at 50% 40%, hsla(35, 95%, 55%, 0.08), transparent 70%);
+	pointer-events: none;
+	z-index: -1;
+}
+
+img,
+svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	line-height: var(--leading-tight);
+	letter-spacing: -0.02em;
+	font-weight: 700;
+}
+
+h1 {
+	font-size: var(--text-3xl);
+}
+
+::selection {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+	border-radius: var(--radius-sm);
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+/* ---------- Layout ---------- */
+
+.container {
+	width: 100%;
+	max-width: calc(var(--content-width) + var(--gutter) * 2);
+	margin-inline: auto;
+	padding-inline: var(--gutter);
+}
+
+.section {
+	padding-block: var(--space-7);
+}
+
+.section-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-4);
+	margin-bottom: var(--space-5);
+}
+
+.section-title {
+	font-size: var(--text-xl);
+	font-weight: 700;
+}
+
+.section-count {
+	color: var(--text-secondary);
+	font-weight: 500;
+}
+
+.section-link {
+	font-size: var(--text-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+	transition: color var(--duration-fast);
+}
+
+.section-link:hover {
+	color: var(--accent);
+}
+
+.page-header {
+	padding-top: var(--space-7);
+	padding-bottom: var(--space-5);
+}
+
+.page-title {
+	font-size: var(--text-3xl);
+	margin-bottom: var(--space-2);
+}
+
+.page-intro {
+	color: var(--text-secondary);
+	font-size: var(--text-lg);
+}
+
+.empty-state {
+	padding: var(--space-6);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius);
+	color: var(--text-secondary);
+	text-align: center;
+}
+
+.empty-state a {
+	color: var(--accent);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 0.7rem 1.25rem;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	line-height: 1;
+	border-radius: var(--radius-pill);
+	border: 1px solid transparent;
+	cursor: pointer;
+	transition:
+		transform var(--duration) var(--ease-out),
+		box-shadow var(--duration) var(--ease-out),
+		background-color var(--duration-fast),
+		border-color var(--duration-fast),
+		color var(--duration-fast);
+}
+
+.btn:hover {
+	transform: translateY(-2px) scale(1.03);
+}
+
+.btn:active {
+	transform: translateY(0) scale(0.99);
+}
+
+.btn-primary {
+	background: var(--accent-gradient);
+	color: var(--on-accent);
+}
+
+.btn-primary:hover {
+	box-shadow: var(--accent-glow);
+}
+
+.btn-ghost {
+	background: var(--bg-card);
+	border-color: var(--border);
+	color: var(--text-primary);
+}
+
+.btn-ghost:hover {
+	background: var(--bg-card-hover);
+	border-color: var(--border-strong);
+}
+
+.btn svg {
+	width: 1em;
+	height: 1em;
+}
+
+/* ---------- Pills / tags ---------- */
+
+.pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	padding: 0.2rem 0.65rem;
+	font-size: var(--text-xs);
+	font-weight: 500;
+	color: var(--text-secondary);
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	white-space: nowrap;
+}
+
+a.pill {
+	transition:
+		color var(--duration-fast),
+		border-color var(--duration-fast);
+}
+
+a.pill:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* ---------- Rich text (Portable Text output) ---------- */
+
+.prose {
+	font-size: 1.0625rem;
+	line-height: 1.8;
+	color: hsl(0, 0%, 84%);
+}
+
+/* Descendant selectors: PortableText may wrap its output in an element */
+.prose :where(p, ul, ol, blockquote, pre, figure, table) {
+	margin-bottom: 1.25em;
+}
+
+.prose h2 {
+	font-size: var(--text-2xl);
+	margin: 2.2em 0 0.75em;
+	color: var(--text-primary);
+	scroll-margin-top: calc(64px + var(--space-4));
+}
+
+.prose h3 {
+	font-size: var(--text-xl);
+	margin: 1.8em 0 0.6em;
+	color: var(--text-primary);
+	scroll-margin-top: calc(64px + var(--space-4));
+}
+
+.prose :where(h2, h3):first-child {
+	margin-top: 0;
+}
+
+.prose a {
+	color: var(--accent);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.prose a:hover {
+	text-decoration-thickness: 2px;
+}
+
+.prose strong {
+	color: var(--text-primary);
+	font-weight: 700;
+}
+
+.prose ul,
+.prose ol {
+	padding-inline-start: 1.4em;
+}
+
+.prose li + li {
+	margin-top: 0.4em;
+}
+
+.prose li::marker {
+	color: var(--accent);
+}
+
+.prose blockquote {
+	padding: var(--space-3) var(--space-5);
+	border-inline-start: 3px solid var(--accent);
+	background: var(--accent-soft);
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	color: var(--text-primary);
+	font-style: italic;
+}
+
+.prose code {
+	font-family: var(--font-code);
+	font-size: 0.875em;
+	padding: 0.15em 0.4em;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.prose pre {
+	padding: var(--space-4) var(--space-5);
+	overflow-x: auto;
+	font-size: var(--text-sm);
+	line-height: 1.65;
+	background: hsl(220, 15%, 10%);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.prose pre code {
+	padding: 0;
+	background: none;
+	border: 0;
+	font-size: inherit;
+}
+
+.prose img {
+	margin-block: 1.5em;
+	border-radius: var(--radius);
+}
+
+.prose figure img {
+	margin-block: 0;
+}
+
+.prose figcaption {
+	margin-top: var(--space-2);
+	font-size: var(--text-sm);
+	color: var(--text-secondary);
+	text-align: center;
+}
+
+.prose hr {
+	border: 0;
+	border-top: 1px solid var(--border);
+	margin-block: 2.5em;
+}
+
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-sm);
+}
+
+.prose th,
+.prose td {
+	padding: var(--space-2) var(--space-3);
+	border-bottom: 1px solid var(--border);
+	text-align: start;
+}
+
+/* ---------- Scroll reveal ---------- */
+
+/*
+  Only hide content when JS is running (the `js` class is set in the
+  document head), so the page is fully readable without JavaScript.
+*/
+.js [data-reveal] {
+	opacity: 0;
+	transform: translateY(18px);
+	transition:
+		opacity var(--duration-slow) var(--ease-out),
+		transform var(--duration-slow) var(--ease-out);
+	transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js [data-reveal].is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
+
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	.js [data-reveal] {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (max-width: 640px) {
+	:root {
+		--text-3xl: 2.1rem;
+		--text-2xl: 1.5rem;
+	}
+
+	.section {
+		padding-block: var(--space-6);
+	}
+}

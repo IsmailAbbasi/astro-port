@@ -1,0 +1,178 @@
+---
+import { decodeSlug, getEmDashEntry, getSeoMeta } from "emdash";
+import { Image, PortableText } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import { safeExternalUrl } from "../../lib/profile";
+import type { Project } from "../../../emdash-env";
+
+const slug = decodeSlug(Astro.params.slug);
+if (!slug) return Astro.redirect("/404");
+
+const { entry: project, error, cacheHint } = await getEmDashEntry("projects", slug);
+if (error) return new Response("Could not load the project", { status: 500 });
+if (!project) return Astro.redirect("/404");
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+function absoluteImageUrl(image: Project["featured_image"]): string | undefined {
+	if (!image) return undefined;
+	if (image.src) return image.src.startsWith("http") ? image.src : new URL(image.src, Astro.url.origin).href;
+	const storageKey = typeof image.meta?.storageKey === "string" ? image.meta.storageKey : image.id;
+	return storageKey ? `${Astro.url.origin}/_emdash/api/media/file/${storageKey}` : undefined;
+}
+
+const seo = getSeoMeta(project, {
+	siteUrl: Astro.url.origin,
+	path: `/projects/${slug}`,
+	defaultDescription: project.data.summary,
+	defaultOgImage: absoluteImageUrl(project.data.featured_image),
+});
+
+const technologies = project.data.terms?.tech ?? [];
+const liveUrl = safeExternalUrl(project.data.live_url);
+const githubUrl = safeExternalUrl(project.data.github_url);
+---
+
+<Base
+	title={seo.title}
+	pageTitle={seo.ogTitle}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	type="article"
+	content={{ collection: "projects", id: project.data.id, slug }}
+>
+	<article class="container project">
+		<a href="/projects" class="back-link">← All projects</a>
+
+		<header class="project-header">
+			{
+				project.data.year && (
+					<p class="project-year" {...project.edit.year}>
+						{project.data.year}
+					</p>
+				)
+			}
+			<h1 class="project-title" {...project.edit.title}>{project.data.title}</h1>
+			{
+				project.data.summary && (
+					<p class="project-summary" {...project.edit.summary}>
+						{project.data.summary}
+					</p>
+				)
+			}
+			{
+				technologies.length > 0 && (
+					<ul class="project-tech" aria-label="Technologies">
+						{technologies.map((tech) => (
+							<li class="pill">{tech.label}</li>
+						))}
+					</ul>
+				)
+			}
+			{
+				(liveUrl || githubUrl) && (
+					<div class="project-links">
+						{liveUrl && (
+							<a href={liveUrl} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+								Visit live site ↗
+							</a>
+						)}
+						{githubUrl && (
+							<a href={githubUrl} class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+								View source ↗
+							</a>
+						)}
+					</div>
+				)
+			}
+		</header>
+
+		{
+			project.data.featured_image && (
+				<div class="project-cover" {...project.edit.featured_image}>
+					<Image image={project.data.featured_image} />
+				</div>
+			)
+		}
+
+		{
+			project.data.content && project.data.content.length > 0 && (
+				<div class="prose" {...project.edit.content}>
+					<PortableText value={project.data.content} />
+				</div>
+			)
+		}
+	</article>
+</Base>
+
+<style>
+	.project {
+		padding-top: var(--space-6);
+	}
+
+	.back-link {
+		display: inline-block;
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		transition:
+			color var(--duration-fast),
+			transform var(--duration) var(--ease-out);
+	}
+
+	.back-link:hover {
+		color: var(--accent);
+		transform: translateX(-3px);
+	}
+
+	.project-header {
+		margin-top: var(--space-6);
+		margin-bottom: var(--space-6);
+	}
+
+	.project-year {
+		font-family: var(--font-code);
+		font-size: var(--text-sm);
+		color: var(--accent);
+	}
+
+	.project-title {
+		margin-top: var(--space-2);
+		font-size: clamp(2rem, 5vw, 2.75rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.project-summary {
+		margin-top: var(--space-4);
+		font-size: var(--text-lg);
+		color: var(--text-secondary);
+	}
+
+	.project-tech {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-top: var(--space-5);
+		list-style: none;
+	}
+
+	.project-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		margin-top: var(--space-6);
+	}
+
+	.project-cover {
+		margin-bottom: var(--space-6);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.project-cover :global(img) {
+		width: 100%;
+		height: auto;
+	}
+</style>

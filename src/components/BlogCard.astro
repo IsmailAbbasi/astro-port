@@ -1,0 +1,102 @@
+---
+import type { EditProxy } from "emdash";
+import { formatDate } from "../lib/format";
+
+interface Props {
+	title: string;
+	href: string;
+	date?: Date | null;
+	excerpt?: string;
+	readingTime?: number;
+	edit?: EditProxy;
+	revealDelay?: number;
+}
+
+const { title, href, date, excerpt, readingTime, edit, revealDelay = 0 } = Astro.props;
+const formattedDate = formatDate(date);
+---
+
+<article class="blog-card" data-reveal style={`--reveal-delay: ${revealDelay}ms`}>
+	<a href={href} class="card-link">
+		<div class="card-top">
+			<h3 class="card-title" {...edit?.title}>{title}</h3>
+			{formattedDate && <time class="card-date" datetime={date?.toISOString()}>{formattedDate}</time>}
+		</div>
+		{
+			excerpt && (
+				<p class="card-excerpt" {...edit?.excerpt}>
+					{excerpt}
+				</p>
+			)
+		}
+		{readingTime && <span class="card-meta">{readingTime} min read</span>}
+	</a>
+</article>
+
+<style>
+	.blog-card {
+		height: 100%;
+	}
+
+	.card-link {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		height: 100%;
+		padding: var(--space-5);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		transition:
+			transform var(--duration) var(--ease-out),
+			background-color var(--duration),
+			border-color var(--duration),
+			box-shadow var(--duration) var(--ease-out);
+	}
+
+	.card-link:hover {
+		transform: translateY(-4px);
+		background: var(--bg-card-hover);
+		border-color: hsla(35, 95%, 55%, 0.4);
+		box-shadow: 0 12px 40px -16px hsla(35, 95%, 55%, 0.35);
+	}
+
+	.card-top {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-3);
+	}
+
+	.card-title {
+		font-size: var(--text-lg);
+		line-height: var(--leading-snug);
+		transition: color var(--duration-fast);
+	}
+
+	.card-link:hover .card-title {
+		color: var(--accent);
+	}
+
+	.card-date {
+		flex-shrink: 0;
+		font-size: var(--text-xs);
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	.card-excerpt {
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.card-meta {
+		margin-top: auto;
+		font-size: var(--text-xs);
+		color: var(--text-secondary);
+	}
+</style>

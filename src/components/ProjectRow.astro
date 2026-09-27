@@ -1,0 +1,214 @@
+---
+import type { EditProxy } from "emdash";
+import { safeExternalUrl } from "../lib/profile";
+
+interface Props {
+	title: string;
+	href: string;
+	summary?: string;
+	year?: string;
+	technologies?: string[];
+	liveUrl?: string;
+	githubUrl?: string;
+	edit?: EditProxy;
+	revealDelay?: number;
+}
+
+const { title, href, summary, year, technologies = [], liveUrl, githubUrl, edit, revealDelay = 0 } = Astro.props;
+const live = safeExternalUrl(liveUrl);
+const github = safeExternalUrl(githubUrl);
+---
+
+<li class="project-row" data-reveal style={`--reveal-delay: ${revealDelay}ms`}>
+	<div class="row-main">
+		<h3 class="row-title">
+			{/* The ::after of this link covers the whole row (stretched link) */}
+			<a href={href} class="row-link" {...edit?.title}>{title}</a>
+			{year && <span class="row-year">{year}</span>}
+		</h3>
+		{
+			summary && (
+				<p class="row-summary" {...edit?.summary}>
+					{summary}
+				</p>
+			)
+		}
+	</div>
+
+	<div class="row-side">
+		{
+			technologies.length > 0 && (
+				<p class="row-tech">
+					{technologies.map((tech, i) => (
+						<>
+							{i > 0 && <span aria-hidden="true"> • </span>}
+							{tech}
+						</>
+					))}
+				</p>
+			)
+		}
+		<div class="row-actions">
+			{
+				github && (
+					<a href={github} class="row-icon" target="_blank" rel="noopener noreferrer" aria-label={`${title} on GitHub`}>
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+							<path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z" />
+						</svg>
+					</a>
+				)
+			}
+			{
+				live ? (
+					<a href={live} class="row-icon" target="_blank" rel="noopener noreferrer" aria-label={`Open ${title} live`}>
+						<span aria-hidden="true">↗</span>
+					</a>
+				) : (
+					<span class="row-icon row-icon--static" aria-hidden="true">
+						→
+					</span>
+				)
+			}
+		</div>
+	</div>
+</li>
+
+<style>
+	.project-row {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-5);
+		padding: var(--space-4) var(--space-5);
+		border-bottom: 1px solid var(--border);
+		transition: background-color var(--duration);
+	}
+
+	.project-row:last-child {
+		border-bottom: 0;
+	}
+
+	.project-row:hover {
+		background: var(--bg-card-hover);
+	}
+
+	.row-main {
+		min-width: 0;
+	}
+
+	.row-title {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-3);
+		font-size: var(--text-base);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.row-link {
+		transition: color var(--duration-fast);
+	}
+
+	.row-link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+
+	.project-row:hover .row-link {
+		color: var(--accent);
+	}
+
+	.row-year {
+		font-size: var(--text-xs);
+		font-weight: 500;
+		color: var(--text-secondary);
+	}
+
+	.row-summary {
+		margin-top: var(--space-1);
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.row-side {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		flex-shrink: 0;
+	}
+
+	.row-tech {
+		font-family: var(--font-code);
+		font-size: var(--text-xs);
+		color: var(--text-secondary);
+		text-align: end;
+	}
+
+	.row-actions {
+		display: flex;
+		gap: var(--space-2);
+	}
+
+	.row-icon {
+		position: relative;
+		z-index: 1; /* sit above the stretched link */
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		font-size: var(--text-base);
+		color: var(--text-secondary);
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		transition:
+			color var(--duration-fast),
+			border-color var(--duration-fast),
+			transform var(--duration) var(--ease-out);
+	}
+
+	.row-icon svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	a.row-icon:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+		transform: translate(2px, -2px);
+	}
+
+	.row-icon--static {
+		z-index: 0;
+		transition: transform var(--duration) var(--ease-out);
+	}
+
+	.project-row:hover .row-icon--static {
+		color: var(--accent);
+		transform: translateX(3px);
+	}
+
+	@media (max-width: 640px) {
+		.project-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-3);
+			padding-inline: var(--space-4);
+		}
+
+		.row-side {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		.row-tech {
+			text-align: start;
+		}
+	}
+</style>

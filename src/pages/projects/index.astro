@@ -1,0 +1,90 @@
+---
+import { getEmDashCollection, getTermsForEntries } from "emdash";
+import Base from "../../layouts/Base.astro";
+import ProjectRow from "../../components/ProjectRow.astro";
+
+const cursor = Astro.url.searchParams.get("cursor") || undefined;
+const result = await getEmDashCollection("projects", {
+	orderBy: { published_at: "desc" },
+	limit: 20,
+	cursor,
+});
+if (result.error) {
+	return new Response("Could not load projects", { status: 500 });
+}
+const { entries: projects, nextCursor, cacheHint } = result;
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const techByProject = await getTermsForEntries(
+	"projects",
+	projects.map((p) => p.data.id),
+	"tech",
+);
+---
+
+<Base title="Projects" description="Things I've designed, built and shipped.">
+	<div class="container">
+		<header class="page-header" data-reveal>
+			<h1 class="page-title">Projects</h1>
+			<p class="page-intro">Things I've designed, built and shipped.</p>
+		</header>
+
+		{
+			projects.length > 0 ? (
+				<ul class="project-list">
+					{projects.map((project, i) => (
+						<ProjectRow
+							title={project.data.title}
+							href={`/projects/${project.id}`}
+							summary={project.data.summary}
+							year={project.data.year}
+							technologies={(techByProject.get(project.data.id) ?? []).map((t) => t.label)}
+							liveUrl={project.data.live_url}
+							githubUrl={project.data.github_url}
+							edit={project.edit}
+							revealDelay={Math.min(i, 6) * 60}
+						/>
+					))}
+				</ul>
+			) : (
+				<p class="empty-state">
+					No projects yet. <a href="/_emdash/admin/content/projects/new">Add a project</a>.
+				</p>
+			)
+		}
+
+		{
+			(cursor || nextCursor) && (
+				<nav class="pagination" aria-label="Pagination">
+					{cursor && (
+						<a href="/projects" class="btn btn-ghost">
+							← Newest
+						</a>
+					)}
+					{nextCursor && (
+						<a href={`/projects?cursor=${encodeURIComponent(nextCursor)}`} class="btn btn-ghost" rel="next">
+							More projects →
+						</a>
+					)}
+				</nav>
+			)
+		}
+	</div>
+</Base>
+
+<style>
+	.project-list {
+		list-style: none;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.pagination {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-3);
+		margin-top: var(--space-6);
+	}
+</style>

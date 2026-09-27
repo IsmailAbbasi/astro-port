@@ -1,0 +1,512 @@
+{
+	"$schema": "https://emdashcms.com/seed.schema.json",
+	"version": "1",
+	"meta": {
+		"name": "astro-port",
+		"description": "Dark, minimal developer portfolio with a blog, projects and tech stack",
+		"author": "Ismail"
+	},
+	"settings": {
+		"title": "Ismail",
+		"tagline": "Developer portfolio & blog"
+	},
+	"collections": [
+		{
+			"slug": "profile",
+			"label": "Profile",
+			"labelSingular": "Profile",
+			"description": "Hero section, contact details, CV and social links. Keep exactly one published entry.",
+			"routable": false,
+			"sortOrder": 1,
+			"supports": ["drafts", "revisions"],
+			"fields": [
+				{ "slug": "title", "label": "Name", "type": "string", "required": true },
+				{ "slug": "role", "label": "Role", "type": "string" },
+				{ "slug": "email", "label": "Email", "type": "string" },
+				{ "slug": "bio", "label": "Bio (bold text is highlighted)", "type": "portableText" },
+				{ "slug": "available", "label": "Available for work", "type": "boolean", "defaultValue": true },
+				{
+					"slug": "cv",
+					"label": "CV (PDF)",
+					"type": "file",
+					"validation": { "allowedMimeTypes": ["application/pdf"] }
+				},
+				{ "slug": "hire_url", "label": "Hire Me link (defaults to email)", "type": "url" },
+				{ "slug": "x_url", "label": "X profile URL", "type": "url" },
+				{ "slug": "bento_url", "label": "Bento profile URL", "type": "url" },
+				{ "slug": "github_url", "label": "GitHub profile URL", "type": "url" },
+				{ "slug": "linkedin_url", "label": "LinkedIn profile URL", "type": "url" }
+			]
+		},
+		{
+			"slug": "posts",
+			"label": "Posts",
+			"labelSingular": "Post",
+			"sortOrder": 2,
+			"supports": ["drafts", "revisions", "preview", "scheduling", "search", "seo"],
+			"urlPattern": "/posts/{slug}",
+			"fields": [
+				{ "slug": "title", "label": "Title", "type": "string", "required": true, "searchable": true },
+				{ "slug": "excerpt", "label": "Excerpt", "type": "text", "searchable": true },
+				{ "slug": "featured_image", "label": "Cover image", "type": "image" },
+				{ "slug": "content", "label": "Content", "type": "portableText", "searchable": true }
+			]
+		},
+		{
+			"slug": "projects",
+			"label": "Projects",
+			"labelSingular": "Project",
+			"sortOrder": 3,
+			"supports": ["drafts", "revisions", "preview", "search", "seo"],
+			"urlPattern": "/projects/{slug}",
+			"fields": [
+				{ "slug": "title", "label": "Title", "type": "string", "required": true, "searchable": true },
+				{ "slug": "summary", "label": "Short description", "type": "text", "searchable": true },
+				{ "slug": "year", "label": "Year", "type": "string" },
+				{ "slug": "live_url", "label": "Live URL", "type": "url" },
+				{ "slug": "github_url", "label": "GitHub URL", "type": "url" },
+				{ "slug": "featured", "label": "Show on home page", "type": "boolean", "defaultValue": true },
+				{ "slug": "featured_image", "label": "Cover image", "type": "image" },
+				{ "slug": "content", "label": "Case study", "type": "portableText", "searchable": true }
+			]
+		},
+		{
+			"slug": "stack",
+			"label": "Tech Stack",
+			"labelSingular": "Technology",
+			"description": "Badges shown in the Tech Stack section, grouped by category.",
+			"routable": false,
+			"sortOrder": 4,
+			"supports": [],
+			"fields": [
+				{ "slug": "title", "label": "Name", "type": "string", "required": true },
+				{
+					"slug": "category",
+					"label": "Category",
+					"type": "select",
+					"required": true,
+					"indexed": true,
+					"defaultValue": "Frontend",
+					"validation": { "options": ["Frontend", "Backend", "Database", "DevOps", "Tools"] }
+				},
+				{ "slug": "simple_icon", "label": "Simple Icons slug (e.g. react, nodedotjs)", "type": "string" },
+				{ "slug": "icon", "label": "Custom icon (overrides Simple Icons)", "type": "image" }
+			]
+		}
+	],
+	"taxonomies": [
+		{
+			"name": "tag",
+			"label": "Tags",
+			"labelSingular": "Tag",
+			"hierarchical": false,
+			"collections": ["posts"],
+			"terms": [
+				{ "slug": "astro", "label": "Astro" },
+				{ "slug": "emdash", "label": "EmDash" },
+				{ "slug": "cloudflare", "label": "Cloudflare" },
+				{ "slug": "web-dev", "label": "Web Dev" },
+				{ "slug": "notes", "label": "Notes" }
+			]
+		},
+		{
+			"name": "tech",
+			"label": "Technologies",
+			"labelSingular": "Technology",
+			"hierarchical": false,
+			"collections": ["projects"],
+			"terms": [
+				{ "slug": "react", "label": "React" },
+				{ "slug": "nextjs", "label": "Next.js" },
+				{ "slug": "astro", "label": "Astro" },
+				{ "slug": "typescript", "label": "TypeScript" },
+				{ "slug": "nodejs", "label": "Node.js" },
+				{ "slug": "python", "label": "Python" },
+				{ "slug": "postgresql", "label": "PostgreSQL" },
+				{ "slug": "mongodb", "label": "MongoDB" },
+				{ "slug": "tailwind", "label": "Tailwind" },
+				{ "slug": "docker", "label": "Docker" },
+				{ "slug": "cloudflare", "label": "Cloudflare" },
+				{ "slug": "emdash", "label": "EmDash" }
+			]
+		}
+	],
+	"menus": [
+		{
+			"name": "primary",
+			"label": "Primary Navigation",
+			"items": [
+				{ "type": "custom", "label": "Home", "url": "/" },
+				{ "type": "custom", "label": "Posts", "url": "/posts" }
+			]
+		}
+	],
+	"content": {
+		"profile": [
+			{
+				"id": "profile-me",
+				"slug": "me",
+				"status": "published",
+				"data": {
+					"title": "Ismail",
+					"role": "Full-Stack Developer",
+					"email": "hello@example.com",
+					"available": true,
+					"github_url": "https://github.com/IsmailAbbasi",
+					"bio": [
+						{
+							"_type": "block",
+							"_key": "b1",
+							"style": "normal",
+							"children": [
+								{ "_type": "span", "_key": "b1s1", "text": "I'm a " },
+								{ "_type": "span", "_key": "b1s2", "text": "full-stack developer", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s3", "text": " who builds fast, content-first web apps with " },
+								{ "_type": "span", "_key": "b1s4", "text": "React", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s5", "text": ", " },
+								{ "_type": "span", "_key": "b1s6", "text": "Astro", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s7", "text": " and " },
+								{ "_type": "span", "_key": "b1s8", "text": "TypeScript", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s9", "text": ", backed by " },
+								{ "_type": "span", "_key": "b1s10", "text": "Node.js", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s11", "text": " and edge platforms like " },
+								{ "_type": "span", "_key": "b1s12", "text": "Cloudflare", "marks": ["strong"] },
+								{ "_type": "span", "_key": "b1s13", "text": ". Edit this bio in the admin panel under Profile." }
+							]
+						}
+					]
+				}
+			}
+		],
+		"posts": [
+			{
+				"id": "post-hello-world",
+				"slug": "hello-world",
+				"status": "published",
+				"data": {
+					"title": "Hello, world",
+					"excerpt": "The first post on the new site. Replace it with your own introduction from the admin panel.",
+					"content": [
+						{
+							"_type": "block",
+							"_key": "h1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "h1s1",
+									"text": "This is a sample post created by the seed file. Everything on this site, including this post, can be edited or deleted from the EmDash admin at /_emdash/admin."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "h2",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "h2s1", "text": "What goes here" }]
+						},
+						{
+							"_type": "block",
+							"_key": "h3",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "h3s1",
+									"text": "A short introduction works well as a first post: who you are, what you're working on, and what you plan to write about."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": { "tag": ["notes"] }
+			},
+			{
+				"id": "post-how-this-site-works",
+				"slug": "how-this-site-works",
+				"status": "published",
+				"data": {
+					"title": "How this portfolio is built",
+					"excerpt": "Astro renders every page on the server, EmDash stores the content in Cloudflare D1, and the whole thing runs as a single Cloudflare Worker.",
+					"content": [
+						{
+							"_type": "block",
+							"_key": "w1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "w1s1",
+									"text": "This site is an Astro project with the EmDash CMS integration, deployed to Cloudflare Workers."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "w2",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "w2s1", "text": "The pieces" }]
+						},
+						{
+							"_type": "block",
+							"_key": "w3",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [
+								{ "_type": "span", "_key": "w3s1", "text": "Astro", "marks": ["strong"] },
+								{ "_type": "span", "_key": "w3s2", "text": " renders each page on request, so published changes appear without a rebuild." }
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "w4",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [
+								{ "_type": "span", "_key": "w4s1", "text": "EmDash", "marks": ["strong"] },
+								{ "_type": "span", "_key": "w4s2", "text": " provides the admin panel, media library, menus and taxonomies." }
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "w5",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [
+								{ "_type": "span", "_key": "w5s1", "text": "Cloudflare D1 and R2", "marks": ["strong"] },
+								{ "_type": "span", "_key": "w5s2", "text": " store the content database and uploaded files." }
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "w6",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "w6s1", "text": "Why server-rendered" }]
+						},
+						{
+							"_type": "block",
+							"_key": "w7",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "w7s1",
+									"text": "Content lives in a database rather than in Markdown files, so writing a post or adding a project never needs a git push."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "w8",
+							"style": "blockquote",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "w8s1",
+									"text": "Code changes go through git. Content changes go through the admin panel."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": { "tag": ["astro", "emdash", "cloudflare"] }
+			},
+			{
+				"id": "post-writing-in-emdash",
+				"slug": "writing-posts-in-emdash",
+				"status": "published",
+				"data": {
+					"title": "Writing posts in EmDash",
+					"excerpt": "A quick reference for the editor: headings, lists, quotes, code blocks and images all come from the add-block menu.",
+					"content": [
+						{
+							"_type": "block",
+							"_key": "e1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "e1s1",
+									"text": "Open Posts in the admin sidebar and choose New. The title, excerpt and cover image appear on the post cards; the content field is the article body."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "e2",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "e2s1", "text": "Formatting" }]
+						},
+						{
+							"_type": "block",
+							"_key": "e3",
+							"style": "normal",
+							"children": [
+								{ "_type": "span", "_key": "e3s1", "text": "Select text to make it " },
+								{ "_type": "span", "_key": "e3s2", "text": "bold", "marks": ["strong"] },
+								{ "_type": "span", "_key": "e3s3", "text": " or " },
+								{ "_type": "span", "_key": "e3s4", "text": "italic", "marks": ["em"] },
+								{
+									"_type": "span",
+									"_key": "e3s5",
+									"text": ". Use the add-block control for headings, lists, quotes, code blocks, tables and images."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "e4",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "e4s1", "text": "Publishing" }]
+						},
+						{
+							"_type": "block",
+							"_key": "e5",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "e5s1",
+									"text": "Save keeps a draft. Publish makes the post live immediately; you can also schedule it for later."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": { "tag": ["emdash", "notes"] }
+			}
+		],
+		"projects": [
+			{
+				"id": "project-astro-port",
+				"slug": "astro-port",
+				"status": "published",
+				"data": {
+					"title": "astro-port",
+					"summary": "This portfolio: a server-rendered Astro site with EmDash CMS, running on Cloudflare Workers, D1 and R2.",
+					"year": "2026",
+					"github_url": "https://github.com/IsmailAbbasi/astro-port",
+					"featured": true,
+					"content": [
+						{
+							"_type": "block",
+							"_key": "a1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "a1s1",
+									"text": "A dark, minimal portfolio with a blog, project case studies and a tech stack section, all editable from the EmDash admin panel."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"_key": "a2",
+							"style": "h2",
+							"children": [{ "_type": "span", "_key": "a2s1", "text": "Highlights" }]
+						},
+						{
+							"_type": "block",
+							"_key": "a3",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [{ "_type": "span", "_key": "a3s1", "text": "Content changes go live instantly with no rebuild" }]
+						},
+						{
+							"_type": "block",
+							"_key": "a4",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [{ "_type": "span", "_key": "a4s1", "text": "Native cross-page view transitions and scroll reveal animations" }]
+						},
+						{
+							"_type": "block",
+							"_key": "a5",
+							"style": "normal",
+							"listItem": "bullet",
+							"level": 1,
+							"children": [{ "_type": "span", "_key": "a5s1", "text": "RSS feed, sitemap and per-page SEO metadata" }]
+						}
+					]
+				},
+				"taxonomies": { "tech": ["astro", "emdash", "typescript", "cloudflare"] }
+			},
+			{
+				"id": "project-analytics-dashboard",
+				"slug": "analytics-dashboard",
+				"status": "published",
+				"data": {
+					"title": "Analytics Dashboard",
+					"summary": "Sample project. Replace it with your own work from the admin panel under Projects.",
+					"year": "2025",
+					"featured": true,
+					"content": [
+						{
+							"_type": "block",
+							"_key": "d1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "d1s1",
+									"text": "Use this space for a short case study: the problem, your approach, and the result. Add screenshots with the image block."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": { "tech": ["react", "typescript", "nodejs", "postgresql"] }
+			},
+			{
+				"id": "project-realtime-chat",
+				"slug": "realtime-chat",
+				"status": "published",
+				"data": {
+					"title": "Realtime Chat",
+					"summary": "Sample project. Add live and GitHub links so the row shows its external link icons.",
+					"year": "2024",
+					"featured": true,
+					"content": [
+						{
+							"_type": "block",
+							"_key": "c1",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "c1s1",
+									"text": "Projects with no case study can simply link out: fill in Live URL or GitHub URL and keep this field short."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": { "tech": ["nextjs", "mongodb", "docker"] }
+			}
+		],
+		"stack": [
+			{ "id": "stack-react", "slug": "react", "status": "published", "data": { "title": "React", "category": "Frontend", "simple_icon": "react" } },
+			{ "id": "stack-nextjs", "slug": "nextjs", "status": "published", "data": { "title": "Next.js", "category": "Frontend", "simple_icon": "nextdotjs" } },
+			{ "id": "stack-astro", "slug": "astro", "status": "published", "data": { "title": "Astro", "category": "Frontend", "simple_icon": "astro" } },
+			{ "id": "stack-typescript", "slug": "typescript", "status": "published", "data": { "title": "TypeScript", "category": "Frontend", "simple_icon": "typescript" } },
+			{ "id": "stack-tailwind", "slug": "tailwind", "status": "published", "data": { "title": "Tailwind CSS", "category": "Frontend", "simple_icon": "tailwindcss" } },
+			{ "id": "stack-nodejs", "slug": "nodejs", "status": "published", "data": { "title": "Node.js", "category": "Backend", "simple_icon": "nodedotjs" } },
+			{ "id": "stack-express", "slug": "express", "status": "published", "data": { "title": "Express", "category": "Backend", "simple_icon": "express" } },
+			{ "id": "stack-python", "slug": "python", "status": "published", "data": { "title": "Python", "category": "Backend", "simple_icon": "python" } },
+			{ "id": "stack-postgresql", "slug": "postgresql", "status": "published", "data": { "title": "PostgreSQL", "category": "Database", "simple_icon": "postgresql" } },
+			{ "id": "stack-mongodb", "slug": "mongodb", "status": "published", "data": { "title": "MongoDB", "category": "Database", "simple_icon": "mongodb" } },
+			{ "id": "stack-docker", "slug": "docker", "status": "published", "data": { "title": "Docker", "category": "DevOps", "simple_icon": "docker" } },
+			{ "id": "stack-cloudflare", "slug": "cloudflare", "status": "published", "data": { "title": "Cloudflare", "category": "DevOps", "simple_icon": "cloudflare" } },
+			{ "id": "stack-github-actions", "slug": "github-actions", "status": "published", "data": { "title": "GitHub Actions", "category": "DevOps", "simple_icon": "githubactions" } },
+			{ "id": "stack-git", "slug": "git", "status": "published", "data": { "title": "Git", "category": "Tools", "simple_icon": "git" } },
+			{ "id": "stack-figma", "slug": "figma", "status": "published", "data": { "title": "Figma", "category": "Tools", "simple_icon": "figma" } },
+			{ "id": "stack-linux", "slug": "linux", "status": "published", "data": { "title": "Linux", "category": "Tools", "simple_icon": "linux" } }
+		]
+	}
+}

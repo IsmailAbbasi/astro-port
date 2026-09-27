@@ -1,0 +1,148 @@
+---
+import { getMenuWithCacheHint, getSiteSettingsWithCacheHint } from "emdash";
+import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
+import { createPublicPageContext } from "emdash/page";
+import { Font } from "astro:assets";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { getProfile } from "../lib/profile";
+import "../styles/global.css";
+
+interface Props {
+	title?: string;
+	pageTitle?: string | null;
+	description?: string | null;
+	image?: string | null;
+	canonical?: string | null;
+	robots?: string | null;
+	type?: "website" | "article";
+	content?: { collection: string; id: string; slug?: string | null };
+}
+
+const {
+	title,
+	pageTitle,
+	description,
+	image,
+	canonical,
+	robots,
+	type = "website",
+	content,
+} = Astro.props;
+
+const [settingsResult, menuResult, profileResult] = await Promise.all([
+	getSiteSettingsWithCacheHint(),
+	getMenuWithCacheHint("primary"),
+	getProfile(),
+]);
+const settings = settingsResult.data;
+const menu = menuResult.data;
+const { profile } = profileResult;
+if (Astro.cache?.enabled) {
+	Astro.cache.set(settingsResult.cacheHint);
+	Astro.cache.set(menuResult.cacheHint);
+	Astro.cache.set(profileResult.cacheHint);
+}
+
+const siteTitle = settings?.title || profile?.data.title || "Portfolio";
+const separator = settings?.seo?.titleSeparator || " — ";
+const fullTitle = !title
+	? siteTitle
+	: title === siteTitle || title.endsWith(`${separator}${siteTitle}`)
+		? title
+		: `${title}${separator}${siteTitle}`;
+const siteDescription = settings?.tagline || profile?.data.role || "Developer portfolio";
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.url.origin).href;
+
+const pageCtx = createPublicPageContext({
+	Astro,
+	kind: content ? "content" : "custom",
+	pageType: type,
+	title: fullTitle,
+	pageTitle: pageTitle ?? title ?? siteTitle,
+	description: description || siteDescription,
+	canonical: canonicalUrl,
+	image,
+	content,
+	seo: { ogImage: image, robots },
+	siteName: siteTitle,
+});
+
+const isLoggedIn = Boolean(Astro.locals.user);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="theme-color" content="#111419" />
+		<title>{fullTitle}</title>
+		<!-- Fallback icon; a favicon set in EmDash Settings is added by EmDashHead below -->
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<script is:inline>
+			document.documentElement.classList.add("js");
+		</script>
+		<EmDashHead page={pageCtx} />
+		<Font cssVariable="--font-sans" preload />
+		<Font cssVariable="--font-mono" />
+		<link rel="alternate" type="application/rss+xml" title={`${siteTitle} — Posts`} href="/rss.xml" />
+	</head>
+	<body>
+		<EmDashBodyStart page={pageCtx} />
+		<a href="#main" class="skip-link">Skip to content</a>
+
+		<Navbar email={profile?.data.email} items={menu?.items ?? []} isLoggedIn={isLoggedIn} />
+
+		<main id="main">
+			<slot />
+		</main>
+
+		<Footer name={profile?.data.title || siteTitle} />
+
+		<EmDashBodyEnd page={pageCtx} />
+
+		<script>
+			// Scroll reveal: fade + slide up elements marked with data-reveal.
+			const targets = document.querySelectorAll<HTMLElement>("[data-reveal]");
+			if ("IntersectionObserver" in window) {
+				const observer = new IntersectionObserver(
+					(entries) => {
+						for (const entry of entries) {
+							if (entry.isIntersecting) {
+								entry.target.classList.add("is-visible");
+								observer.unobserve(entry.target);
+							}
+						}
+					},
+					{ rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+				);
+				targets.forEach((el) => observer.observe(el));
+			} else {
+				targets.forEach((el) => el.classList.add("is-visible"));
+			}
+		</script>
+
+		<style>
+			.skip-link {
+				position: absolute;
+				top: -100px;
+				left: var(--gutter);
+				padding: var(--space-2) var(--space-4);
+				background: var(--accent);
+				color: var(--on-accent);
+				border-radius: var(--radius-sm);
+				font-weight: 600;
+				z-index: 100;
+			}
+
+			.skip-link:focus {
+				top: var(--space-3);
+			}
+
+			main {
+				min-height: calc(100vh - 180px);
+			}
+		</style>
+	</body>
+</html>

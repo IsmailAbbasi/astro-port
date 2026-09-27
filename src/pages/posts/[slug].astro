@@ -1,0 +1,203 @@
+---
+import { decodeSlug, getEmDashEntry, getSeoMeta } from "emdash";
+import { Image, PortableText } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import { formatDate, getReadingTime } from "../../lib/format";
+import type { Post } from "../../../emdash-env";
+
+const slug = decodeSlug(Astro.params.slug);
+if (!slug) return Astro.redirect("/404");
+
+const { entry: post, error, cacheHint } = await getEmDashEntry("posts", slug);
+if (error) return new Response("Could not load the post", { status: 500 });
+if (!post) return Astro.redirect("/404");
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+// Absolute URL of the cover image for social previews.
+function absoluteImageUrl(image: Post["featured_image"]): string | undefined {
+	if (!image) return undefined;
+	if (image.src) return image.src.startsWith("http") ? image.src : new URL(image.src, Astro.url.origin).href;
+	const storageKey = typeof image.meta?.storageKey === "string" ? image.meta.storageKey : image.id;
+	return storageKey ? `${Astro.url.origin}/_emdash/api/media/file/${storageKey}` : undefined;
+}
+
+const seo = getSeoMeta(post, {
+	siteUrl: Astro.url.origin,
+	path: `/posts/${slug}`,
+	defaultDescription: post.data.excerpt,
+	defaultOgImage: absoluteImageUrl(post.data.featured_image),
+});
+
+const tags = post.data.terms?.tag ?? [];
+const readingTime = getReadingTime(post.data.content);
+const publishDate = formatDate(post.data.publishedAt, "long");
+---
+
+<Base
+	title={seo.title}
+	pageTitle={seo.ogTitle}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	type="article"
+	content={{ collection: "posts", id: post.data.id, slug }}
+>
+	<div class="progress" aria-hidden="true"><div class="progress-bar"></div></div>
+
+	<article class="container article">
+		<a href="/posts" class="back-link">← Back to posts</a>
+
+		<header class="article-header">
+			<p class="article-meta">
+				{publishDate && <time datetime={post.data.publishedAt?.toISOString()}>{publishDate}</time>}
+				{publishDate && <span aria-hidden="true">·</span>}
+				<span>{readingTime} min read</span>
+			</p>
+			<h1 class="article-title" {...post.edit.title}>{post.data.title}</h1>
+			{
+				post.data.excerpt && (
+					<p class="article-excerpt" {...post.edit.excerpt}>
+						{post.data.excerpt}
+					</p>
+				)
+			}
+			{
+				tags.length > 0 && (
+					<ul class="article-tags" aria-label="Tags">
+						{tags.map((tag) => (
+							<li class="pill">#{tag.label}</li>
+						))}
+					</ul>
+				)
+			}
+		</header>
+
+		{
+			post.data.featured_image && (
+				<div class="article-cover" {...post.edit.featured_image}>
+					<Image image={post.data.featured_image} />
+				</div>
+			)
+		}
+
+		<div class="prose article-body" {...post.edit.content}>
+			<PortableText value={post.data.content} />
+		</div>
+
+		<footer class="article-footer">
+			<a href="/posts" class="btn btn-ghost">← Back to posts</a>
+		</footer>
+	</article>
+
+	<script>
+		// Reading progress bar
+		const bar = document.querySelector<HTMLElement>(".progress-bar");
+		const article = document.querySelector<HTMLElement>(".article-body");
+		if (bar && article) {
+			let ticking = false;
+			const update = () => {
+				const start = article.offsetTop;
+				const end = start + article.offsetHeight - window.innerHeight;
+				const progress = end > start ? (window.scrollY - start) / (end - start) : 1;
+				bar.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
+				ticking = false;
+			};
+			const onScroll = () => {
+				if (!ticking) {
+					ticking = true;
+					requestAnimationFrame(update);
+				}
+			};
+			window.addEventListener("scroll", onScroll, { passive: true });
+			window.addEventListener("resize", onScroll, { passive: true });
+			update();
+		}
+	</script>
+</Base>
+
+<style>
+	.progress {
+		position: fixed;
+		inset: 0 0 auto;
+		height: 3px;
+		z-index: 60;
+		pointer-events: none;
+	}
+
+	.progress-bar {
+		height: 100%;
+		background: var(--accent-gradient);
+		transform: scaleX(0);
+		transform-origin: 0 50%;
+	}
+
+	.article {
+		padding-top: var(--space-6);
+	}
+
+	.back-link {
+		display: inline-block;
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		transition:
+			color var(--duration-fast),
+			transform var(--duration) var(--ease-out);
+	}
+
+	.back-link:hover {
+		color: var(--accent);
+		transform: translateX(-3px);
+	}
+
+	.article-header {
+		margin-top: var(--space-6);
+		margin-bottom: var(--space-6);
+	}
+
+	.article-meta {
+		display: flex;
+		gap: var(--space-2);
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+	}
+
+	.article-title {
+		margin-top: var(--space-3);
+		font-size: clamp(2rem, 5vw, 2.75rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.article-excerpt {
+		margin-top: var(--space-4);
+		font-size: var(--text-lg);
+		color: var(--text-secondary);
+	}
+
+	.article-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-top: var(--space-5);
+		list-style: none;
+	}
+
+	.article-cover {
+		margin-bottom: var(--space-6);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.article-cover :global(img) {
+		width: 100%;
+		height: auto;
+	}
+
+	.article-footer {
+		margin-top: var(--space-7);
+		padding-top: var(--space-5);
+		border-top: 1px solid var(--border);
+	}
+</style>

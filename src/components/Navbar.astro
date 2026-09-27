@@ -1,0 +1,135 @@
+---
+interface MenuItem {
+	id: string;
+	label: string;
+	url: string;
+	target?: string;
+}
+
+interface Props {
+	email?: string;
+	items: MenuItem[];
+	isLoggedIn?: boolean;
+}
+
+const { email, items, isLoggedIn = false } = Astro.props;
+
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+function isActive(url: string): boolean {
+	const path = url.replace(/\/$/, "") || "/";
+	return path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
+}
+---
+
+<header class="site-header">
+	<nav class="container nav" aria-label="Main">
+		{
+			email ? (
+				<a href={`mailto:${email}`} class="nav-email">
+					{email}
+				</a>
+			) : (
+				<a href="/" class="nav-email">
+					Home
+				</a>
+			)
+		}
+		<div class="nav-links">
+			{
+				items.map((item, i) => (
+					<>
+						{i > 0 && (
+							<span class="nav-sep" aria-hidden="true">
+								/
+							</span>
+						)}
+						<a
+							href={item.url}
+							target={item.target}
+							rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
+							class:list={["nav-link", { active: isActive(item.url) }]}
+							aria-current={isActive(item.url) ? "page" : undefined}
+						>
+							{item.label}
+						</a>
+					</>
+				))
+			}
+			{
+				isLoggedIn && (
+					<a href="/_emdash/admin" class="nav-admin">
+						Admin
+					</a>
+				)
+			}
+		</div>
+	</nav>
+</header>
+
+<style>
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: hsla(220, 15%, 8%, 0.72);
+		backdrop-filter: saturate(160%) blur(12px);
+		-webkit-backdrop-filter: saturate(160%) blur(12px);
+		border-bottom: 1px solid transparent;
+		view-transition-name: site-header;
+	}
+
+	.nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		height: 64px;
+	}
+
+	.nav-email {
+		font-size: var(--text-sm);
+		color: var(--text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		transition: color var(--duration-fast);
+	}
+
+	.nav-email:hover {
+		color: var(--text-primary);
+	}
+
+	.nav-links {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-size: var(--text-sm);
+	}
+
+	.nav-sep {
+		color: var(--border-strong);
+	}
+
+	.nav-link {
+		color: var(--text-secondary);
+		transition: color var(--duration-fast);
+	}
+
+	.nav-link:hover,
+	.nav-link.active {
+		color: var(--text-primary);
+	}
+
+	.nav-link.active {
+		font-weight: 600;
+	}
+
+	.nav-admin {
+		margin-inline-start: var(--space-3);
+		padding: 0.15rem 0.6rem;
+		font-size: var(--text-xs);
+		color: var(--accent);
+		border: 1px solid var(--accent);
+		border-radius: var(--radius-pill);
+	}
+</style>

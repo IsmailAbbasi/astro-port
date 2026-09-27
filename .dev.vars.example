@@ -1,0 +1,7 @@
+# Local secrets for `astro dev` on the Cloudflare runtime.
+# Copy to .dev.vars (git-ignored) only if you need them.
+#
+# EMDASH_ENCRYPTION_KEY encrypts plugin settings marked as secret.
+# This site uses no such plugins, so it is optional. Generate one with:
+#   npx emdash secrets generate
+EMDASH_ENCRYPTION_KEY=
