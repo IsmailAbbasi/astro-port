@@ -5,14 +5,21 @@
 
 import type { BylineSummary, ContentBylineCredit, TaxonomyTerm, PortableTextBlock } from "emdash";
 
-type EmDashImage = { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown> };
-
-type EmDashFile = { id: string; url?: string; src?: string; filename?: string; mimeType?: string; size?: number; provider?: string; meta?: Record<string, unknown> };
-
-interface SystemFields {
+export interface Profile {
   id: string;
   slug: string | null;
   status: string;
+  title: string;
+  role?: string;
+  email?: string;
+  bio?: PortableTextBlock[];
+  available?: boolean;
+  cv?: { id: string; url?: string; src?: string; filename?: string; mimeType?: string; size?: number; provider?: string; meta?: Record<string, unknown> };
+  hire_url?: string;
+  x_url?: string;
+  bento_url?: string;
+  github_url?: string;
+  linkedin_url?: string;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -21,43 +28,56 @@ interface SystemFields {
   terms?: Record<string, TaxonomyTerm[]>;
 }
 
-export interface Profile extends SystemFields {
-  title: string;
-  role?: string;
-  email?: string;
-  bio?: PortableTextBlock[];
-  available?: boolean;
-  cv?: EmDashFile;
-  hire_url?: string;
-  x_url?: string;
-  bento_url?: string;
-  github_url?: string;
-  linkedin_url?: string;
-}
-
-export interface Post extends SystemFields {
+export interface Post {
+  id: string;
+  slug: string | null;
+  status: string;
   title: string;
   excerpt?: string;
-  featured_image?: EmDashImage;
+  featured_image?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown>; darkVariant?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown> } };
   content?: PortableTextBlock[];
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  byline?: BylineSummary | null;
+  bylines?: ContentBylineCredit[];
+  terms?: Record<string, TaxonomyTerm[]>;
 }
 
-export interface Project extends SystemFields {
+export interface Project {
+  id: string;
+  slug: string | null;
+  status: string;
   title: string;
   summary?: string;
   year?: string;
   live_url?: string;
   github_url?: string;
   featured?: boolean;
-  featured_image?: EmDashImage;
+  featured_image?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown>; darkVariant?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown> } };
   content?: PortableTextBlock[];
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  byline?: BylineSummary | null;
+  bylines?: ContentBylineCredit[];
+  terms?: Record<string, TaxonomyTerm[]>;
 }
 
-export interface Stack extends SystemFields {
+export interface Stack {
+  id: string;
+  slug: string | null;
+  status: string;
   title: string;
   category: "Frontend" | "Backend" | "Database" | "DevOps" | "Tools";
   simple_icon?: string;
-  icon?: EmDashImage;
+  icon?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown>; darkVariant?: { id: string; src?: string; alt?: string; width?: number; height?: number; filename?: string; mimeType?: string; blurhash?: string; dominantColor?: string; focalX?: number; focalY?: number; provider?: string; previewUrl?: string; meta?: Record<string, unknown> } };
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  byline?: BylineSummary | null;
+  bylines?: ContentBylineCredit[];
+  terms?: Record<string, TaxonomyTerm[]>;
 }
 
 declare module "emdash" {

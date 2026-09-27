@@ -5,6 +5,7 @@ import { defineConfig, fontProviders } from "astro/config";
 import emdash from "emdash/astro";
 
 export default defineConfig({
+	site: "https://astro-port.ismailabbasi118.workers.dev",
 	// EmDash content is read at request time, so every page is server-rendered.
 	output: "server",
 	adapter: cloudflare(),

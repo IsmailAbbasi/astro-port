@@ -16,9 +16,9 @@
 	--bg-card-hover: hsl(220, 15%, 16%);
 	--text-primary: hsl(0, 0%, 92%);
 	--text-secondary: hsl(0, 0%, 60%);
-	--accent: hsl(35, 95%, 55%);
-	--accent-strong: hsl(25, 92%, 55%);
-	--accent-gradient: linear-gradient(135deg, hsl(35, 95%, 55%), hsl(15, 90%, 55%));
+	--accent: #f99e1f;
+	--accent-strong: #f67b23;
+	--accent-gradient: linear-gradient(135deg, #f99e1f, #FF9800);
 	--accent-soft: hsla(35, 95%, 55%, 0.12);
 	--accent-glow: 0 0 0 1px hsla(35, 95%, 55%, 0.35), 0 8px 32px -8px hsla(35, 95%, 55%, 0.35);
 	--on-accent: hsl(220, 15%, 8%);

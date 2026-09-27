@@ -3,6 +3,7 @@ import { getMenuWithCacheHint, getSiteSettingsWithCacheHint } from "emdash";
 import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
 import { createPublicPageContext } from "emdash/page";
 import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import { getProfile } from "../lib/profile";
@@ -83,6 +84,7 @@ const isLoggedIn = Boolean(Astro.locals.user);
 		<script is:inline>
 			document.documentElement.classList.add("js");
 		</script>
+		{ !isLoggedIn && <ClientRouter /> }
 		<EmDashHead page={pageCtx} />
 		<Font cssVariable="--font-sans" preload />
 		<Font cssVariable="--font-mono" />

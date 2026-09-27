@@ -3,25 +3,41 @@
 	"name": "astro-port",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	// Environment variables
+	"vars": {
+		"EMDASH_SITE_URL": "https://astro-port.ismailabbasi118.workers.dev"
+	},
 	// Created automatically on the first `wrangler deploy` if they don't exist yet.
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "astro-port",
+			"migrations_dir": "../../migrations",
+			"database_id": "98a3ddab-9feb-4939-a44a-08ab753a46ef",
 		},
 	],
 	"r2_buckets": [
 		{
 			"binding": "MEDIA",
-			"bucket_name": "astro-port-media",
-		},
+			"bucket_name": "astro-port-media"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "a8c33ce7e4d5436e90e74ad66bc77feb"
+		}
 	],
 	// Sandboxed plugins require Worker Loader, available on Workers paid plans. Uncomment to enable:
 	// "worker_loaders": [{ "binding": "LOADER" }],
 	// Scheduled publishing + general maintenance
 	"triggers": {
-		"crons": ["* * * * *"],
+		"crons": [
+			"* * * * *"
+		],
 	},
 	// Custom domain: uncomment after the first deploy works on *.workers.dev
 	// "routes": [{ "pattern": "yourdomain.com", "custom_domain": true }],
