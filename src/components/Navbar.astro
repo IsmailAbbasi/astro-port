@@ -1,4 +1,7 @@
 ---
+import { site } from "../data/site";
+import ThemeToggle from "./ThemeToggle.astro";
+
 interface MenuItem {
 	id: string;
 	label: string;
@@ -7,129 +10,350 @@ interface MenuItem {
 }
 
 interface Props {
-	email?: string;
+	name: string;
+	/** Primary menu from the EmDash admin. */
 	items: MenuItem[];
 	isLoggedIn?: boolean;
 }
 
-const { email, items, isLoggedIn = false } = Astro.props;
+const { name, items, isLoggedIn = false } = Astro.props;
+
+interface NavLink {
+	label: string;
+	href: string;
+	target?: string;
+}
+
+// Home page sections, as /#id so they work from any page. "/" and "/posts"
+// from the admin menu are covered here; any other admin menu items are added
+// before Contact.
+const extra: NavLink[] = items
+	.filter((item) => !["/", "/posts"].includes(item.url.replace(/\/$/, "") || "/"))
+	.map((item) => ({ label: item.label, href: item.url, target: item.target }));
+const links: NavLink[] = [
+	{ label: "Work", href: "/#work" },
+	{ label: "Projects", href: "/#projects" },
+	{ label: "Blog", href: "/posts" },
+	{ label: "Stack", href: "/#stack" },
+	...extra,
+	{ label: "Contact", href: "/#contact" },
+];
 
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
-function isActive(url: string): boolean {
-	const path = url.replace(/\/$/, "") || "/";
-	return path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
+function isCurrent(href: string): boolean {
+	if (href.includes("#")) return false;
+	const path = href.replace(/\/$/, "") || "/";
+	return path !== "/" && (currentPath === path || currentPath.startsWith(`${path}/`));
 }
 ---
 
-<header class="site-header">
-	<nav class="container nav" aria-label="Main">
-		{
-			email ? (
-				<a href={`mailto:${email}`} class="nav-email">
-					{email}
-				</a>
-			) : (
-				<a href="/" class="nav-email">
-					Home
-				</a>
-			)
-		}
-		<div class="nav-links">
+<header class="bar">
+	<div class="wrap bar-in">
+		<a class="callsign" href="/" aria-label={`${name}, home`}>
+			<svg viewBox="0 0 100 100" aria-hidden="true">
+				<circle cx="50" cy="50" r="47" fill="none" stroke="var(--kapton)" stroke-width="3"></circle>
+				<circle cx="50" cy="50" r="17" fill="var(--panel-2)" stroke="var(--ink-2)" stroke-width="3"></circle>
+				<ellipse cx="50" cy="50" rx="34" ry="11" fill="none" stroke="var(--ink)" stroke-width="3" transform="rotate(-28 50 50)"></ellipse>
+				<circle cx="76" cy="44" r="6" fill="var(--kapton)"></circle>
+			</svg>
+			<span>{site.callsign}</span><span class="sep">/</span><span class="bar-name">{name}</span>
+		</a>
+
+		<nav class="bar-nav" aria-label="Main">
 			{
-				items.map((item, i) => (
-					<>
-						{i > 0 && (
-							<span class="nav-sep" aria-hidden="true">
-								/
-							</span>
-						)}
-						<a
-							href={item.url}
-							target={item.target}
-							rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
-							class:list={["nav-link", { active: isActive(item.url) }]}
-							aria-current={isActive(item.url) ? "page" : undefined}
-						>
-							{item.label}
-						</a>
-					</>
+				links.map((link) => (
+					<a
+						href={link.href}
+						target={link.target}
+						rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+						aria-current={isCurrent(link.href) ? "page" : undefined}
+					>
+						{link.label}
+					</a>
 				))
 			}
+		</nav>
+
+		<div class="bar-side">
+			<div
+				class="bar-status"
+				data-bar-status
+				data-offset={site.timezone.offsetMinutes}
+				data-tz={site.timezone.label}
+				title="AOS means the simulated satellite on the home page is above the ground station's horizon. LOS means it is not."
+			>
+				<span class="led" data-led></span><span data-link>LOS</span><span class="bar-clock" data-clock>--:--:-- {site.timezone.label}</span>
+			</div>
+			{isLoggedIn && <a href="/_emdash/admin" class="bar-admin">Admin</a>}
+			<ThemeToggle />
+			<button class="bar-menu" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Menu" data-menu-toggle>
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+					<path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<nav class="menu-panel" id="site-menu" aria-label="Menu" hidden data-menu-panel>
+		<div class="wrap menu-in">
 			{
-				isLoggedIn && (
-					<a href="/_emdash/admin" class="nav-admin">
-						Admin
+				links.map((link) => (
+					<a
+						href={link.href}
+						target={link.target}
+						rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+						aria-current={isCurrent(link.href) ? "page" : undefined}
+					>
+						{link.label}
 					</a>
-				)
+				))
 			}
 		</div>
 	</nav>
 </header>
 
+<script>
+	import { clockString, mount } from "../scripts/lifecycle";
+	import { elevAt, missionTime } from "../scripts/orbit";
+
+	// AOS/LOS light and clock. Follows the same orbit as the home page globe.
+	mount("[data-bar-status]", (el) => {
+		const led = el.querySelector("[data-led]");
+		const link = el.querySelector("[data-link]");
+		const clock = el.querySelector("[data-clock]");
+		const offset = Number(el.dataset.offset) || 0;
+		const tz = el.dataset.tz || "";
+		const tick = () => {
+			const aos = elevAt(missionTime()) > 0;
+			led?.classList.toggle("on", aos);
+			if (link) link.textContent = aos ? "AOS" : "LOS";
+			if (clock) clock.textContent = `${clockString(offset)} ${tz}`;
+		};
+		tick();
+		const timer = window.setInterval(tick, 250);
+		return () => clearInterval(timer);
+	});
+
+	// Small screens: the section links move into a drop-down menu.
+	mount<HTMLButtonElement>("[data-menu-toggle]", (button) => {
+		const panel = document.getElementById(button.getAttribute("aria-controls") || "");
+		if (!panel) return;
+		const setOpen = (open: boolean) => {
+			button.setAttribute("aria-expanded", String(open));
+			panel.hidden = !open;
+		};
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && !panel.hidden) {
+				setOpen(false);
+				button.focus();
+			}
+		};
+		const wide = window.matchMedia("(min-width: 781px)");
+		const onWide = () => {
+			if (wide.matches) setOpen(false);
+		};
+
+		button.addEventListener("click", () => setOpen(panel.hidden));
+		panel.addEventListener("click", (e) => {
+			if ((e.target as Element).closest("a")) setOpen(false);
+		});
+		document.addEventListener("keydown", onKey);
+		wide.addEventListener("change", onWide);
+		return () => {
+			document.removeEventListener("keydown", onKey);
+			wide.removeEventListener("change", onWide);
+		};
+	});
+</script>
+
 <style>
-	.site-header {
+	.bar {
 		position: sticky;
-		top: 0;
+		top: env(safe-area-inset-top, 0px);
 		z-index: 50;
-		background: hsla(220, 15%, 8%, 0.72);
-		backdrop-filter: saturate(160%) blur(12px);
-		-webkit-backdrop-filter: saturate(160%) blur(12px);
-		border-bottom: 1px solid transparent;
+		background: var(--void-glass);
+		-webkit-backdrop-filter: blur(12px);
+		backdrop-filter: blur(12px);
+		border-bottom: 1px solid var(--rule);
 		view-transition-name: site-header;
 	}
 
-	.nav {
+	.bar-in {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-4);
-		height: 64px;
+		gap: 16px;
+		min-height: var(--bar-h);
 	}
 
-	.nav-email {
-		font-size: var(--text-sm);
-		color: var(--text-secondary);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		transition: color var(--duration-fast);
-	}
-
-	.nav-email:hover {
-		color: var(--text-primary);
-	}
-
-	.nav-links {
+	.callsign {
 		display: flex;
 		align-items: center;
-		gap: var(--space-2);
-		font-size: var(--text-sm);
+		gap: 12px;
+		min-width: 0;
+		font-family: var(--f-mono);
+		font-size: 11px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--ink);
+		white-space: nowrap;
 	}
 
-	.nav-sep {
-		color: var(--border-strong);
+	.callsign svg {
+		width: 28px;
+		height: 28px;
+		flex: none;
 	}
 
-	.nav-link {
-		color: var(--text-secondary);
-		transition: color var(--duration-fast);
+	.callsign .sep {
+		color: var(--rule-2);
 	}
 
-	.nav-link:hover,
-	.nav-link.active {
-		color: var(--text-primary);
+	.bar-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.nav-link.active {
-		font-weight: 600;
+	.bar-nav {
+		display: flex;
+		gap: 30px;
+		font-family: var(--f-mono);
+		font-size: 11px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
 	}
 
-	.nav-admin {
-		margin-inline-start: var(--space-3);
-		padding: 0.15rem 0.6rem;
-		font-size: var(--text-xs);
-		color: var(--accent);
-		border: 1px solid var(--accent);
-		border-radius: var(--radius-pill);
+	.bar-nav a,
+	.menu-in a {
+		color: var(--ink-2);
+		padding-block: 8px;
+		transition: color 0.2s;
+	}
+
+	.bar-nav a:hover,
+	.menu-in a:hover,
+	.bar-nav a[aria-current="page"],
+	.menu-in a[aria-current="page"] {
+		color: var(--kapton);
+	}
+
+	.bar-side {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		flex: none;
+	}
+
+	.bar-status {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-family: var(--f-mono);
+		font-size: 11px;
+		letter-spacing: 0.1em;
+		color: var(--ink-2);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.bar-clock {
+		color: var(--dim);
+	}
+
+	.bar-admin {
+		font-family: var(--f-mono);
+		font-size: 10px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--kapton);
+		border: 1px solid var(--kapton-line);
+		padding: 4px 8px;
+		border-radius: 2px;
+	}
+
+	.bar-menu {
+		display: none;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		color: var(--ink-2);
+		background: transparent;
+		border: 1px solid var(--rule-2);
+		border-radius: 2px;
+		cursor: pointer;
+	}
+
+	.bar-menu[aria-expanded="true"] {
+		color: var(--kapton);
+		border-color: var(--kapton);
+	}
+
+	.menu-panel {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: var(--void);
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.menu-panel[hidden] {
+		display: none;
+	}
+
+	.menu-in {
+		display: grid;
+		padding-block: 8px 16px;
+		font-family: var(--f-mono);
+		font-size: 12px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.menu-in a {
+		padding-block: 12px;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.menu-in a:last-child {
+		border-bottom: 0;
+	}
+
+	@media (max-width: 1080px) {
+		.bar-nav {
+			gap: 20px;
+		}
+
+		.bar-name,
+		.callsign .sep {
+			display: none;
+		}
+	}
+
+	@media (max-width: 780px) {
+		.bar-nav {
+			display: none;
+		}
+
+		.bar-menu {
+			display: grid;
+		}
+
+		.bar-name,
+		.callsign .sep {
+			display: inline;
+		}
+
+		.bar-side {
+			gap: 10px;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.bar-name,
+		.callsign .sep,
+		.bar-clock {
+			display: none;
+		}
 	}
 </style>

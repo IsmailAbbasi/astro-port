@@ -1,0 +1,21 @@
+---
+/** Section heading used across the site: amber eyebrow, big title, italic lede. */
+interface Props {
+	eyebrow: string;
+	title: string;
+	lede?: string;
+	/** Heading level: 2 inside a page, 1 for a page's own title. */
+	level?: 1 | 2;
+	id?: string;
+}
+
+const { eyebrow, title, lede, level = 2, id } = Astro.props;
+const Heading = level === 1 ? "h1" : "h2";
+---
+
+<header class="sec-head" data-reveal>
+	<p class="k">{eyebrow}</p>
+	<Heading id={id}>{title}</Heading>
+	{lede && <p class="sec-lede">{lede}</p>}
+	<slot />
+</header>

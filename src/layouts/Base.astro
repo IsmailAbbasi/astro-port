@@ -70,59 +70,132 @@ const pageCtx = createPublicPageContext({
 });
 
 const isLoggedIn = Boolean(Astro.locals.user);
+const name = profile?.data.title || siteTitle;
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="theme-color" content="#111419" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<meta name="theme-color" content="#070a15" />
+		<!--
+			Theme before first paint: the saved choice, else the OS setting.
+			Colours match --void in global.css and THEME_COLOR in scripts/theme.ts.
+			ClientRouter replaces the <html> attributes on each navigation, so the
+			same function runs again after every swap.
+		-->
+		<script is:inline>
+			(function () {
+				var root = document.documentElement;
+				function apply() {
+					var theme = null;
+					try {
+						theme = localStorage.getItem("theme");
+					} catch (e) {}
+					if (theme !== "light" && theme !== "dark") {
+						theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+					}
+					root.classList.add("js");
+					root.setAttribute("data-theme", theme);
+					var meta = document.querySelector('meta[name="theme-color"]');
+					if (meta) meta.setAttribute("content", theme === "light" ? "#f2eee3" : "#070a15");
+				}
+				apply();
+				document.addEventListener("astro:after-swap", apply);
+			})();
+		</script>
 		<title>{fullTitle}</title>
 		<!-- Fallback icon; a favicon set in EmDash Settings is added by EmDashHead below -->
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<script is:inline>
-			document.documentElement.classList.add("js");
-		</script>
-		{ !isLoggedIn && <ClientRouter prefetch="viewport" /> }
+		{!isLoggedIn && <ClientRouter prefetch="viewport" />}
 		<EmDashHead page={pageCtx} />
 		<Font cssVariable="--font-sans" preload />
 		<Font cssVariable="--font-mono" />
+		<Font cssVariable="--font-serif" />
 		<link rel="alternate" type="application/rss+xml" title={`${siteTitle} — Posts`} href="/rss.xml" />
 	</head>
 	<body>
 		<EmDashBodyStart page={pageCtx} />
 		<a href="#main" class="skip-link">Skip to content</a>
 
-		<Navbar email={profile?.data.email} items={menu?.items ?? []} isLoggedIn={isLoggedIn} />
+		<Navbar name={name} items={menu?.items ?? []} isLoggedIn={isLoggedIn} />
 
 		<main id="main">
 			<slot />
 		</main>
 
-		<Footer name={profile?.data.title || siteTitle} />
+		<Footer name={name} />
+
+		<div class="toast" role="status" hidden data-toast>
+			<span class="led on"></span><span data-toast-text>Email copied</span>
+		</div>
 
 		<EmDashBodyEnd page={pageCtx} />
 
 		<script>
+			import { mount } from "../scripts/lifecycle";
+
 			// Scroll reveal: fade + slide up elements marked with data-reveal.
-			const targets = document.querySelectorAll<HTMLElement>("[data-reveal]");
-			if ("IntersectionObserver" in window) {
-				const observer = new IntersectionObserver(
+			let observer: IntersectionObserver | null = null;
+			function reveal() {
+				const targets = document.querySelectorAll<HTMLElement>("[data-reveal]:not(.is-visible)");
+				if (!("IntersectionObserver" in window)) {
+					targets.forEach((el) => el.classList.add("is-visible"));
+					return;
+				}
+				observer?.disconnect();
+				observer = new IntersectionObserver(
 					(entries) => {
 						for (const entry of entries) {
 							if (entry.isIntersecting) {
 								entry.target.classList.add("is-visible");
-								observer.unobserve(entry.target);
+								observer?.unobserve(entry.target);
 							}
 						}
 					},
 					{ rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
 				);
-				targets.forEach((el) => observer.observe(el));
-			} else {
-				targets.forEach((el) => el.classList.add("is-visible"));
+				targets.forEach((el) => observer?.observe(el));
 			}
+			reveal();
+			document.addEventListener("astro:page-load", reveal);
+
+			// "Copy email" buttons: clipboard, or select the address if that's blocked.
+			let toastTimer = 0;
+			function toast(message: string) {
+				const box = document.querySelector<HTMLElement>("[data-toast]");
+				const text = box?.querySelector("[data-toast-text]");
+				if (!box || !text) return;
+				text.textContent = message;
+				box.hidden = false;
+				clearTimeout(toastTimer);
+				toastTimer = window.setTimeout(() => {
+					box.hidden = true;
+				}, 2600);
+			}
+			function selectEmail() {
+				const mail = document.getElementById("mail-text");
+				if (mail) {
+					try {
+						const range = document.createRange();
+						range.selectNodeContents(mail);
+						const selection = window.getSelection();
+						selection?.removeAllRanges();
+						selection?.addRange(range);
+					} catch {
+						// Selection isn't possible; the toast still explains what to do.
+					}
+				}
+				toast("Press Ctrl+C or ⌘C to copy the email.");
+			}
+			mount<HTMLButtonElement>("[data-copy-email]", (button) => {
+				button.addEventListener("click", () => {
+					const email = button.dataset.copyEmail || "";
+					if (!navigator.clipboard?.writeText) return selectEmail();
+					navigator.clipboard.writeText(email).then(() => toast(`Copied ${email}`), selectEmail);
+				});
+			});
 		</script>
 
 		<style>
@@ -130,16 +203,18 @@ const isLoggedIn = Boolean(Astro.locals.user);
 				position: absolute;
 				top: -100px;
 				left: var(--gutter);
-				padding: var(--space-2) var(--space-4);
-				background: var(--accent);
-				color: var(--on-accent);
-				border-radius: var(--radius-sm);
-				font-weight: 600;
+				padding: 10px 16px;
+				background: var(--fill);
+				color: var(--on-fill);
+				font-family: var(--f-mono);
+				font-size: 11px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
 				z-index: 100;
 			}
 
 			.skip-link:focus {
-				top: var(--space-3);
+				top: 12px;
 			}
 
 			main {

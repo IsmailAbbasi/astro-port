@@ -5,49 +5,67 @@ Astro.response.status = 404;
 ---
 
 <Base title="Page not found" robots="noindex">
-	<section class="container not-found">
-		<p class="code">404</p>
+	<section class="wrap page not-found">
+		<p class="k lost"><span class="led"></span>Loss of signal</p>
+		<p class="code" aria-hidden="true">404</p>
 		<h1>Page not found</h1>
 		<p class="message">The page you're looking for doesn't exist or has moved.</p>
 		<div class="links">
-			<a href="/" class="btn btn-primary">Go home</a>
-			<a href="/posts" class="btn btn-ghost">Read the posts</a>
+			<a href="/" class="btn primary">Go home</a>
+			<a href="/posts" class="btn">Read the blog</a>
 		</div>
 	</section>
 </Base>
 
 <style>
 	.not-found {
-		padding-block: var(--space-8);
-		text-align: center;
+		padding-block: clamp(72px, 12vw, 160px);
+	}
+
+	.lost {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--fault);
+	}
+
+	.lost .led {
+		border-color: var(--fault);
 	}
 
 	.code {
-		font-size: clamp(5rem, 18vw, 8rem);
-		font-weight: 800;
-		line-height: 1;
-		letter-spacing: -0.05em;
-		background: var(--accent-gradient);
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
+		margin-top: 18px;
+		font-family: var(--f-display);
+		font-stretch: 125%;
+		--wdth: 125;
+		font-weight: 760;
+		font-size: clamp(96px, 22vw, 220px);
+		line-height: 0.85;
+		letter-spacing: -0.02em;
+		color: var(--kapton);
 	}
 
 	h1 {
-		margin-top: var(--space-4);
-		font-size: var(--text-2xl);
+		margin-top: 24px;
+		font-family: var(--f-display);
+		font-stretch: 115%;
+		--wdth: 115;
+		font-weight: 650;
+		font-size: clamp(26px, 3vw, 36px);
 	}
 
 	.message {
-		margin-top: var(--space-2);
-		color: var(--text-secondary);
+		margin-top: 10px;
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-size: 20px;
+		color: var(--ink-2);
 	}
 
 	.links {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--space-3);
-		margin-top: var(--space-6);
+		gap: 12px;
+		margin-top: 36px;
 	}
 </style>

@@ -22,20 +22,37 @@ export default defineConfig({
 			storage: r2({ binding: "MEDIA" }),
 		}),
 	],
+	// Variable fonts. The design uses in-between weights (e.g. 640, 760) and
+	// the width axis (font-stretch up to 125% on headings), so request the
+	// full ranges. If headings look narrow, check that the "wdth" axis came
+	// through; the fallback is the design file's Google Fonts <link>.
 	fonts: [
 		{
 			provider: fontProviders.google(),
-			name: "Plus Jakarta Sans",
+			name: "Archivo",
 			cssVariable: "--font-sans",
-			weights: [400, 500, 600, 700, 800],
-			fallbacks: ["system-ui", "sans-serif"],
+			weights: ["100 900"],
+			styles: ["normal"],
+			fallbacks: ["sans-serif"],
+			options: { experimental: { variableAxis: { wdth: [["62", "125"]] } } },
 		},
 		{
 			provider: fontProviders.google(),
-			name: "JetBrains Mono",
+			name: "Martian Mono",
 			cssVariable: "--font-mono",
-			weights: [400, 500],
-			fallbacks: ["ui-monospace", "monospace"],
+			weights: ["100 800"],
+			styles: ["normal"],
+			fallbacks: ["monospace"],
+			options: { experimental: { variableAxis: { wdth: [["75", "112.5"]] } } },
+		},
+		{
+			provider: fontProviders.google(),
+			name: "Newsreader",
+			cssVariable: "--font-serif",
+			weights: ["300 600"],
+			styles: ["normal", "italic"],
+			fallbacks: ["serif"],
+			options: { experimental: { variableAxis: { opsz: [["6", "72"]] } } },
 		},
 	],
 	devToolbar: { enabled: false },

@@ -2,6 +2,8 @@
 import { getEmDashCollection, getTermsForEntries } from "emdash";
 import Base from "../../layouts/Base.astro";
 import ProjectRow from "../../components/ProjectRow.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import { site } from "../../data/site";
 
 const cursor = Astro.url.searchParams.get("cursor") || undefined;
 const result = await getEmDashCollection("projects", {
@@ -23,15 +25,12 @@ const techByProject = await getTermsForEntries(
 ---
 
 <Base title="Projects" description="Things I've designed, built and shipped.">
-	<div class="container">
-		<header class="page-header" data-reveal>
-			<h1 class="page-title">Projects</h1>
-			<p class="page-intro">Things I've designed, built and shipped.</p>
-		</header>
+	<div class="wrap page">
+		<SectionHead level={1} eyebrow={site.projects.eyebrow} title="Projects" lede="Things I've designed, built and shipped." />
 
 		{
 			projects.length > 0 ? (
-				<ul class="project-list">
+				<ul class="log">
 					{projects.map((project, i) => (
 						<ProjectRow
 							title={project.data.title}
@@ -57,12 +56,12 @@ const techByProject = await getTermsForEntries(
 			(cursor || nextCursor) && (
 				<nav class="pagination" aria-label="Pagination">
 					{cursor && (
-						<a href="/projects" class="btn btn-ghost">
+						<a href="/projects" class="btn">
 							← Newest
 						</a>
 					)}
 					{nextCursor && (
-						<a href={`/projects?cursor=${encodeURIComponent(nextCursor)}`} class="btn btn-ghost" rel="next">
+						<a href={`/projects?cursor=${encodeURIComponent(nextCursor)}`} class="btn" rel="next">
 							More projects →
 						</a>
 					)}
@@ -71,20 +70,3 @@ const techByProject = await getTermsForEntries(
 		}
 	</div>
 </Base>
-
-<style>
-	.project-list {
-		list-style: none;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
-	}
-
-	.pagination {
-		display: flex;
-		justify-content: space-between;
-		gap: var(--space-3);
-		margin-top: var(--space-6);
-	}
-</style>

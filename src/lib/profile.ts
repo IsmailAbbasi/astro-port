@@ -55,14 +55,14 @@ export interface SocialLink {
 	href: string;
 }
 
-/** Social links in the order shown in the hero; empty fields are skipped. */
+/** Social links in the order shown in the hero and contact section; empty fields are skipped. */
 export function getSocialLinks(profile: Profile | undefined | null): SocialLink[] {
 	if (!profile) return [];
 	const links: [string, string | undefined][] = [
+		["LinkedIn", profile.linkedin_url],
+		["GitHub", profile.github_url],
 		["X", profile.x_url],
 		["Bento", profile.bento_url],
-		["GitHub", profile.github_url],
-		["LinkedIn", profile.linkedin_url],
 	];
 	return links.flatMap(([label, url]) => {
 		const href = safeExternalUrl(url);

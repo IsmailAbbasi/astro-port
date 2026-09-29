@@ -1,48 +1,95 @@
 ---
+import { site } from "../data/site";
+
 interface Props {
 	name: string;
 }
 
 const { name } = Astro.props;
 const year = new Date().getFullYear();
+const ringText = `${name} · ${site.shortRole} · ${site.callsign} ·`.toUpperCase();
 ---
 
-<footer class="site-footer">
-	<div class="container footer-inner">
-		<p>© {year} {name} · Built with <a href="https://astro.build">Astro</a> + <a href="https://emdashcms.com">EmDash</a></p>
-		<a href="/rss.xml" class="footer-rss">RSS</a>
+<footer class="wrap foot">
+	<div class="foot-id">
+		<svg viewBox="0 0 100 100" aria-hidden="true">
+			<defs><path id="foot-ring" d="M50,50 m-39,0 a39,39 0 1,1 78,0 a39,39 0 1,1 -78,0"></path></defs>
+			<circle cx="50" cy="50" r="48.5" fill="none" stroke="var(--kapton)" stroke-width="1"></circle>
+			<circle cx="50" cy="50" r="31" fill="none" stroke="var(--rule-2)" stroke-width="1"></circle>
+			<text font-size="6.4" fill="var(--ink-2)" letter-spacing="1.6" style="font-family: var(--f-mono)">
+				<textPath href="#foot-ring" textLength="240" lengthAdjust="spacing">{ringText}</textPath>
+			</text>
+			<ellipse cx="50" cy="50" rx="27" ry="9" fill="none" stroke="var(--ink-2)" stroke-width=".8" transform="rotate(-28 50 50)"></ellipse>
+			<circle cx="50" cy="50" r="12" fill="var(--panel-2)" stroke="var(--ink-2)" stroke-width=".8"></circle>
+			<path d="M26.16,62.68 A27,9 -28 0,0 73.84,37.32" fill="none" stroke="var(--ink)" stroke-width=".9"></path>
+			<circle cx="71" cy="45.4" r="2.4" fill="var(--kapton)"></circle>
+		</svg>
+		<p><strong>{name}</strong>{site.shortRole} engineer, {site.city}</p>
+	</div>
+	<div class="foot-meta">
+		<p class="k">{site.footerNote}</p>
+		<p class="k">
+			© {year} · <a href="/rss.xml">RSS</a> · Built with <a href="https://astro.build">Astro</a> + <a href="https://emdashcms.com">EmDash</a>
+		</p>
 	</div>
 </footer>
 
 <style>
-	.site-footer {
-		margin-top: var(--space-7);
-		border-top: 1px solid var(--border);
-	}
-
-	.footer-inner {
+	.foot {
+		padding-block: 32px calc(40px + env(safe-area-inset-bottom, 0px));
+		border-top: 1px solid var(--rule);
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-4);
-		padding-block: var(--space-6);
-		font-size: var(--text-sm);
-		color: var(--text-secondary);
+		gap: 20px;
 	}
 
-	.footer-inner a {
-		color: var(--text-primary);
-		transition: color var(--duration-fast);
+	.foot-id {
+		display: flex;
+		align-items: center;
+		gap: 18px;
 	}
 
-	.footer-inner a:hover {
-		color: var(--accent);
+	.foot-id svg {
+		width: 84px;
+		height: 84px;
+		flex: none;
 	}
 
-	@media (max-width: 480px) {
-		.footer-inner {
-			flex-direction: column;
-			text-align: center;
-		}
+	.foot-id p {
+		font-size: 14px;
+		color: var(--ink-2);
+		line-height: 1.5;
+	}
+
+	.foot-id strong {
+		display: block;
+		color: var(--ink);
+		font-weight: 600;
+	}
+
+	.foot-meta {
+		display: grid;
+		gap: 8px;
+		max-width: 46ch;
+	}
+
+	.foot-meta .k {
+		line-height: 1.8;
+		letter-spacing: 0.1em;
+	}
+
+	.foot-meta a {
+		color: var(--ink-2);
+		border-bottom: 1px solid var(--rule-2);
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+
+	.foot-meta a:hover {
+		color: var(--kapton);
+		border-color: var(--kapton);
 	}
 </style>

@@ -2,6 +2,7 @@
 import { decodeSlug, getEmDashEntry, getSeoMeta } from "emdash";
 import { Image, PortableText } from "emdash/ui";
 import Base from "../../layouts/Base.astro";
+import { site } from "../../data/site";
 import { formatDate, getReadingTime } from "../../lib/format";
 import type { Post } from "../../../emdash-env";
 
@@ -43,21 +44,21 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 	type="article"
 	content={{ collection: "posts", id: post.data.id, slug }}
 >
-	<div class="progress" aria-hidden="true"><div class="progress-bar"></div></div>
+	<div class="progress" aria-hidden="true" data-progress><div class="progress-bar"></div></div>
 
-	<article class="container article">
-		<a href="/posts" class="back-link">← Back to posts</a>
+	<article class="wrap page article">
+		<a href="/posts" class="back">← All posts</a>
 
-		<header class="article-header">
-			<p class="article-meta">
+		<header class="article-head">
+			<p class="k article-meta">
+				<span class="accent">{site.writing.eyebrow}</span>
 				{publishDate && <time datetime={post.data.publishedAt?.toISOString()}>{publishDate}</time>}
-				{publishDate && <span aria-hidden="true">·</span>}
 				<span>{readingTime} min read</span>
 			</p>
 			<h1 class="article-title" {...post.edit.title}>{post.data.title}</h1>
 			{
 				post.data.excerpt && (
-					<p class="article-excerpt" {...post.edit.excerpt}>
+					<p class="article-lede" {...post.edit.excerpt}>
 						{post.data.excerpt}
 					</p>
 				)
@@ -66,7 +67,7 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 				tags.length > 0 && (
 					<ul class="article-tags" aria-label="Tags">
 						{tags.map((tag) => (
-							<li class="pill">#{tag.label}</li>
+							<li class="chip">#{tag.label}</li>
 						))}
 					</ul>
 				)
@@ -75,9 +76,9 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 
 		{
 			post.data.featured_image && (
-				<div class="article-cover" {...post.edit.featured_image}>
+				<figure class="inst ticks article-cover" {...post.edit.featured_image}>
 					<Image image={post.data.featured_image} />
-				</div>
+				</figure>
 			)
 		}
 
@@ -85,22 +86,26 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 			<PortableText value={post.data.content} />
 		</div>
 
-		<footer class="article-footer">
-			<a href="/posts" class="btn btn-ghost">← Back to posts</a>
+		<footer class="article-foot">
+			<a href="/posts" class="btn">← All posts</a>
+			<a href="/#contact" class="lnk">Get in touch ↗</a>
 		</footer>
 	</article>
 
 	<script>
+		import { mount } from "../../scripts/lifecycle";
+
 		// Reading progress bar
-		const bar = document.querySelector<HTMLElement>(".progress-bar");
-		const article = document.querySelector<HTMLElement>(".article-body");
-		if (bar && article) {
+		mount("[data-progress]", (progress) => {
+			const bar = progress.querySelector<HTMLElement>(".progress-bar");
+			const article = document.querySelector<HTMLElement>(".article-body");
+			if (!bar || !article) return;
 			let ticking = false;
 			const update = () => {
 				const start = article.offsetTop;
 				const end = start + article.offsetHeight - window.innerHeight;
-				const progress = end > start ? (window.scrollY - start) / (end - start) : 1;
-				bar.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
+				const value = end > start ? (window.scrollY - start) / (end - start) : 1;
+				bar.style.transform = `scaleX(${Math.min(1, Math.max(0, value))})`;
 				ticking = false;
 			};
 			const onScroll = () => {
@@ -112,7 +117,11 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 			window.addEventListener("scroll", onScroll, { passive: true });
 			window.addEventListener("resize", onScroll, { passive: true });
 			update();
-		}
+			return () => {
+				window.removeEventListener("scroll", onScroll);
+				window.removeEventListener("resize", onScroll);
+			};
+		});
 	</script>
 </Base>
 
@@ -120,74 +129,80 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 	.progress {
 		position: fixed;
 		inset: 0 0 auto;
-		height: 3px;
+		height: 2px;
 		z-index: 60;
 		pointer-events: none;
 	}
 
 	.progress-bar {
 		height: 100%;
-		background: var(--accent-gradient);
+		background: var(--fill);
 		transform: scaleX(0);
 		transform-origin: 0 50%;
 	}
 
 	.article {
-		padding-top: var(--space-6);
+		max-width: calc(880px + var(--gutter) * 2);
 	}
 
-	.back-link {
-		display: inline-block;
-		font-size: var(--text-sm);
-		color: var(--text-secondary);
-		transition:
-			color var(--duration-fast),
-			transform var(--duration) var(--ease-out);
-	}
-
-	.back-link:hover {
-		color: var(--accent);
-		transform: translateX(-3px);
-	}
-
-	.article-header {
-		margin-top: var(--space-6);
-		margin-bottom: var(--space-6);
+	.article-head {
+		margin-bottom: clamp(32px, 5vw, 56px);
 	}
 
 	.article-meta {
 		display: flex;
-		gap: var(--space-2);
-		font-size: var(--text-sm);
-		color: var(--text-secondary);
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 18px;
+	}
+
+	.article-meta .accent {
+		color: var(--kapton);
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.article-meta .accent::before {
+		content: "";
+		width: 7px;
+		height: 7px;
+		border: 1px solid currentColor;
 	}
 
 	.article-title {
-		margin-top: var(--space-3);
-		font-size: clamp(2rem, 5vw, 2.75rem);
-		font-weight: 800;
-		letter-spacing: -0.03em;
+		margin-top: 22px;
+		font-family: var(--f-display);
+		font-stretch: 118%;
+		--wdth: 118;
+		font-weight: 680;
+		font-size: clamp(36px, 5.4vw, 64px);
+		line-height: 1;
+		letter-spacing: -0.012em;
 	}
 
-	.article-excerpt {
-		margin-top: var(--space-4);
-		font-size: var(--text-lg);
-		color: var(--text-secondary);
+	.article-lede {
+		margin-top: 20px;
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-weight: 360;
+		font-size: clamp(20px, 2.1vw, 25px);
+		line-height: 1.35;
+		color: var(--ink-2);
+		max-width: 48ch;
 	}
 
 	.article-tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-2);
-		margin-top: var(--space-5);
+		gap: 8px;
+		margin-top: 24px;
 		list-style: none;
 	}
 
 	.article-cover {
-		margin-bottom: var(--space-6);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
+		margin-bottom: clamp(32px, 5vw, 56px);
+		padding: 10px;
 	}
 
 	.article-cover :global(img) {
@@ -195,9 +210,14 @@ const publishDate = formatDate(post.data.publishedAt, "long");
 		height: auto;
 	}
 
-	.article-footer {
-		margin-top: var(--space-7);
-		padding-top: var(--space-5);
-		border-top: 1px solid var(--border);
+	.article-foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: clamp(48px, 7vw, 80px);
+		padding-top: 28px;
+		border-top: 1px solid var(--rule);
 	}
 </style>

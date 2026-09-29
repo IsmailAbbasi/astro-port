@@ -2,6 +2,10 @@
 import { decodeSlug, getEmDashEntry, getSeoMeta } from "emdash";
 import { Image, PortableText } from "emdash/ui";
 import Base from "../../layouts/Base.astro";
+import CricStackDemo from "../../components/demos/CricStackDemo.astro";
+import ExaminateDemo from "../../components/demos/ExaminateDemo.astro";
+import InterceptDemo from "../../components/demos/InterceptDemo.astro";
+import { getProjectExtras, site } from "../../data/site";
 import { safeExternalUrl } from "../../lib/profile";
 import type { Project } from "../../../emdash-env";
 
@@ -30,6 +34,9 @@ const seo = getSeoMeta(project, {
 const technologies = project.data.terms?.tech ?? [];
 const liveUrl = safeExternalUrl(project.data.live_url);
 const githubUrl = safeExternalUrl(project.data.github_url);
+const extras = getProjectExtras(project.id, project.data.title);
+const DEMOS = { intercept: InterceptDemo, examinate: ExaminateDemo, cricstack: CricStackDemo };
+const Demo = extras?.demo ? DEMOS[extras.demo] : undefined;
 ---
 
 <Base
@@ -42,44 +49,34 @@ const githubUrl = safeExternalUrl(project.data.github_url);
 	type="article"
 	content={{ collection: "projects", id: project.data.id, slug }}
 >
-	<article class="container project">
-		<a href="/projects" class="back-link">← All projects</a>
+	<article class="wrap page project">
+		<a href="/projects" class="back">← All projects</a>
 
-		<header class="project-header">
-			{
-				project.data.year && (
-					<p class="project-year" {...project.edit.year}>
-						{project.data.year}
-					</p>
-				)
-			}
+		<header class="project-head">
+			<p class="k project-meta">
+				<span class="accent">{site.projects.eyebrow}</span>
+				{extras?.category && <span>{extras.category}</span>}
+				{project.data.year && <span {...project.edit.year}>{project.data.year}</span>}
+			</p>
 			<h1 class="project-title" {...project.edit.title}>{project.data.title}</h1>
 			{
 				project.data.summary && (
-					<p class="project-summary" {...project.edit.summary}>
+					<p class="project-lede" {...project.edit.summary}>
 						{project.data.summary}
 					</p>
 				)
 			}
-			{
-				technologies.length > 0 && (
-					<ul class="project-tech" aria-label="Technologies">
-						{technologies.map((tech) => (
-							<li class="pill">{tech.label}</li>
-						))}
-					</ul>
-				)
-			}
+			{technologies.length > 0 && <p class="stackline">{technologies.map((tech) => tech.label).join(" · ")}</p>}
 			{
 				(liveUrl || githubUrl) && (
 					<div class="project-links">
 						{liveUrl && (
-							<a href={liveUrl} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+							<a href={liveUrl} class="btn primary" target="_blank" rel="noopener noreferrer">
 								Visit live site ↗
 							</a>
 						)}
 						{githubUrl && (
-							<a href={githubUrl} class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+							<a href={githubUrl} class="btn" target="_blank" rel="noopener noreferrer">
 								View source ↗
 							</a>
 						)}
@@ -89,10 +86,28 @@ const githubUrl = safeExternalUrl(project.data.github_url);
 		</header>
 
 		{
-			project.data.featured_image && (
-				<div class="project-cover" {...project.edit.featured_image}>
-					<Image image={project.data.featured_image} />
+			Demo && (
+				<div class="project-demo">
+					<Demo />
+					{extras?.specs && extras.specs.length > 0 && (
+						<dl class="spec">
+							{extras.specs.map(([label, value]) => (
+								<div>
+									<dt>{label}</dt>
+									<dd>{value}</dd>
+								</div>
+							))}
+						</dl>
+					)}
 				</div>
+			)
+		}
+
+		{
+			project.data.featured_image && (
+				<figure class="inst ticks project-cover" {...project.edit.featured_image}>
+					<Image image={project.data.featured_image} />
+				</figure>
 			)
 		}
 
@@ -108,67 +123,70 @@ const githubUrl = safeExternalUrl(project.data.github_url);
 
 <style>
 	.project {
-		padding-top: var(--space-6);
+		max-width: calc(980px + var(--gutter) * 2);
 	}
 
-	.back-link {
-		display: inline-block;
-		font-size: var(--text-sm);
-		color: var(--text-secondary);
-		transition:
-			color var(--duration-fast),
-			transform var(--duration) var(--ease-out);
+	.project-head {
+		margin-bottom: clamp(32px, 5vw, 56px);
 	}
 
-	.back-link:hover {
-		color: var(--accent);
-		transform: translateX(-3px);
+	.project-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 18px;
 	}
 
-	.project-header {
-		margin-top: var(--space-6);
-		margin-bottom: var(--space-6);
+	.project-meta .accent {
+		color: var(--kapton);
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
 	}
 
-	.project-year {
-		font-family: var(--font-code);
-		font-size: var(--text-sm);
-		color: var(--accent);
+	.project-meta .accent::before {
+		content: "";
+		width: 7px;
+		height: 7px;
+		border: 1px solid currentColor;
 	}
 
 	.project-title {
-		margin-top: var(--space-2);
-		font-size: clamp(2rem, 5vw, 2.75rem);
-		font-weight: 800;
-		letter-spacing: -0.03em;
+		margin-top: 22px;
+		font-family: var(--f-display);
+		font-stretch: 125%;
+		--wdth: 125;
+		font-weight: 720;
+		font-size: clamp(40px, 6.4vw, 80px);
+		line-height: 0.95;
+		letter-spacing: -0.012em;
 	}
 
-	.project-summary {
-		margin-top: var(--space-4);
-		font-size: var(--text-lg);
-		color: var(--text-secondary);
-	}
-
-	.project-tech {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-2);
-		margin-top: var(--space-5);
-		list-style: none;
+	.project-lede {
+		margin-top: 20px;
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-weight: 360;
+		font-size: clamp(20px, 2.1vw, 25px);
+		line-height: 1.35;
+		color: var(--ink);
+		max-width: 44ch;
 	}
 
 	.project-links {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-3);
-		margin-top: var(--space-6);
+		gap: 12px;
+		margin-top: 30px;
+	}
+
+	.project-demo {
+		margin-bottom: clamp(32px, 5vw, 56px);
 	}
 
 	.project-cover {
-		margin-bottom: var(--space-6);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
+		margin-bottom: clamp(32px, 5vw, 56px);
+		padding: 10px;
 	}
 
 	.project-cover :global(img) {

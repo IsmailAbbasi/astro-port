@@ -1,0 +1,153 @@
+---
+import { site } from "../data/site";
+---
+
+<figure class="scope" data-globe data-callsign={site.callsign} data-station="GS-DEL">
+	<div class="scope-frame ticks">
+		<canvas
+			role="img"
+			aria-label={`A dotted globe centred on India. A small satellite labelled ${site.callsign} circles it in a polar orbit, lighting up the ground below it, and links to a ground station in New Delhi as it passes overhead.`}
+		></canvas>
+		<span class="hud tl">Track · {site.callsign}</span>
+		<span class="hud tr">Polar orbit · 97.5°</span>
+		<span class="hud bl">Orthographic</span>
+		<span class="hud br" data-hud-link>Loss of signal</span>
+	</div>
+	<figcaption>
+		<dl class="readout">
+			<div><dt>Sub-satellite</dt><dd data-readout="sub">—</dd></div>
+			<div><dt>Elevation</dt><dd data-readout="el">—</dd></div>
+			<div><dt>Station</dt><dd>GS-DEL 28.6°N</dd></div>
+			<div><dt>Next pass</dt><dd data-readout="next">—</dd></div>
+		</dl>
+		<p class="scope-note">A simulated orbit, drawn live in your browser. Drag to turn the globe.</p>
+	</figcaption>
+</figure>
+
+<script>
+	import { initGlobe } from "../scripts/globe";
+	import { mount } from "../scripts/lifecycle";
+
+	mount("[data-globe]", initGlobe);
+</script>
+
+<style>
+	.scope {
+		width: 100%;
+		max-width: 600px;
+		justify-self: end;
+	}
+
+	.scope-frame {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 1 / 1;
+	}
+
+	.scope-frame::before {
+		content: "";
+		position: absolute;
+		inset: 14%;
+		border-radius: 50%;
+		background: radial-gradient(circle, var(--halo), transparent 68%);
+		pointer-events: none;
+	}
+
+	canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		touch-action: pan-y;
+		cursor: grab;
+	}
+
+	canvas:active {
+		cursor: grabbing;
+	}
+
+	.hud {
+		position: absolute;
+		font-family: var(--f-mono);
+		font-size: 9.5px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--dim);
+		pointer-events: none;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.hud.tl {
+		top: 14px;
+		left: 16px;
+	}
+
+	.hud.tr {
+		top: 14px;
+		right: 16px;
+		text-align: right;
+	}
+
+	.hud.bl {
+		bottom: 14px;
+		left: 16px;
+	}
+
+	.hud.br {
+		bottom: 14px;
+		right: 16px;
+		text-align: right;
+	}
+
+	.hud.on {
+		color: var(--nominal);
+	}
+
+	.readout {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0 14px;
+		margin-top: 14px;
+		padding-top: 12px;
+		border-top: 1px solid var(--rule);
+	}
+
+	.readout dt {
+		font-family: var(--f-mono);
+		font-size: 9.5px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--dim);
+	}
+
+	.readout dd {
+		margin-top: 5px;
+		font-family: var(--f-mono);
+		font-stretch: 87.5%;
+		--wdth: 87.5;
+		font-size: 11.5px;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.scope-note {
+		font-size: 13px;
+		color: var(--dim);
+		margin-top: 12px;
+	}
+
+	@media (max-width: 960px) {
+		.scope {
+			justify-self: center;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.readout {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px 14px;
+		}
+	}
+</style>

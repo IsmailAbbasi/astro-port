@@ -23,9 +23,13 @@ The admin UI is at `http://localhost:4321/_emdash/admin`.
 | `src/worker.ts`             | Worker entry (EmDash handler + scheduled handler)                        |
 | `seed/seed.json`            | Schema + starter content, applied on first run against an empty database |
 | `emdash-env.d.ts`           | Generated collection types (regenerated on dev server start)             |
-| `src/layouts/Base.astro`    | Layout with EmDash head/body wiring, navbar, footer, scroll reveal        |
-| `src/styles/global.css`     | Design tokens and global styles (dark-mode first)                        |
+| `src/layouts/Base.astro`    | Layout with EmDash head/body wiring, theme script, top bar, footer       |
+| `src/styles/global.css`     | Design tokens (dark + light themes) and shared styles                    |
+| `src/data/site.ts`          | Hand-edited home page content the CMS has no fields for                  |
+| `src/scripts/`              | Client scripts: globe, orbit model, theme, `mount()` lifecycle helper    |
 | `src/lib/profile.ts`        | Profile query, CV URL and social-link helpers                            |
+
+The visual design comes from `Ismail Abbasi (1).html` in the project root. Keep that file: `src/scripts/globe-land.ts` reads the globe's land dots from it at build time.
 
 ## Schema
 
@@ -42,7 +46,9 @@ The admin UI is at `http://localhost:4321/_emdash/admin`.
 - `entry.id` is the slug (for URLs). `entry.data.id` is the database ULID (for `getTermsForEntries`, etc.).
 - Taxonomy names in queries must match the seed exactly: `"tag"` and `"tech"`.
 - Pass query `cacheHint`s to `Astro.cache.set()` when `Astro.cache?.enabled`.
-- Page transitions use native cross-document View Transitions (`@view-transition` in `global.css`), not Astro's `<ClientRouter />`, so EmDash's injected scripts (visual editing, plugins) run normally on every page load.
+- `Base.astro` loads Astro's `<ClientRouter />` for logged-out visitors only; logged-in editors get normal page loads (with native `@view-transition`), so EmDash's visual editing runs normally. Because of ClientRouter, client scripts must start widgets with `mount()` from `src/scripts/lifecycle.ts`, which re-runs them after each navigation and stops their timers before the page is swapped.
+- Theme: `data-theme="light" | "dark"` on `<html>`, set before first paint by the inline script in `Base.astro` (saved choice in `localStorage`, else the OS setting). Colours are tokens in `global.css`; never hard-code a colour in a component. Canvas code reads tokens and listens for the `themechange` event.
+- Elements created by client scripts don't get Astro's scoped-style attributes, so style them in `<style is:global>` (see `src/components/demos/`).
 
 ## Skills & docs
 

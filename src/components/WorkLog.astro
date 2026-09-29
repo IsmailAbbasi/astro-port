@@ -1,0 +1,41 @@
+---
+import { site } from "../data/site";
+import SectionHead from "./SectionHead.astro";
+
+const STATUS = {
+	active: "Active",
+	complete: "Complete",
+	graduated: "Graduated",
+} as const;
+---
+
+<section class="wrap sec" id="work" aria-labelledby="work-title">
+	<SectionHead id="work-title" eyebrow={site.work.eyebrow} title={site.work.title} lede={site.work.lede} />
+	<ol class="log">
+		{
+			site.experience.map((item) => (
+				<li class="entry" data-reveal>
+					<div class="e-time">
+						<span class="e-date">{item.dates}</span>
+						<span class:list={["chip", { live: item.status === "active" }]}>
+							{item.status === "active" && <span class="led on" />}
+							{STATUS[item.status]}
+						</span>
+					</div>
+					<div class="e-main">
+						<h3>{item.org}</h3>
+						<p class="e-role">{item.role}</p>
+						{item.points && item.points.length > 0 && (
+							<ul class="plist">
+								{item.points.map((point) => (
+									<li set:html={point} />
+								))}
+							</ul>
+						)}
+						{item.stack && <p class="stackline">{item.stack}</p>}
+					</div>
+				</li>
+			))
+		}
+	</ol>
+</section>

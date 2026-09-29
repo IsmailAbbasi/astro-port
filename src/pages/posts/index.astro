@@ -1,7 +1,9 @@
 ---
-import { getEmDashCollection } from "emdash";
+import { getEmDashCollection, getTermsForEntries } from "emdash";
 import Base from "../../layouts/Base.astro";
 import BlogCard from "../../components/BlogCard.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import { site } from "../../data/site";
 import { getReadingTime } from "../../lib/format";
 
 const cursor = Astro.url.searchParams.get("cursor") || undefined;
@@ -15,18 +17,21 @@ if (result.error) {
 }
 const { entries: posts, nextCursor, cacheHint } = result;
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const tagsByPost = await getTermsForEntries(
+	"posts",
+	posts.map((p) => p.data.id),
+	"tag",
+);
 ---
 
-<Base title="Posts" description="Notes and articles on building for the web.">
-	<div class="container">
-		<header class="page-header" data-reveal>
-			<h1 class="page-title">Posts</h1>
-			<p class="page-intro">Notes and articles on building for the web.</p>
-		</header>
+<Base title="Posts" description={site.writing.lede}>
+	<div class="wrap page">
+		<SectionHead level={1} eyebrow={site.writing.eyebrow} title={site.writing.title} lede={site.writing.lede} />
 
 		{
 			posts.length > 0 ? (
-				<div class="posts-list">
+				<div class="log">
 					{posts.map((post, i) => (
 						<BlogCard
 							title={post.data.title}
@@ -34,8 +39,10 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 							date={post.data.publishedAt}
 							excerpt={post.data.excerpt}
 							readingTime={getReadingTime(post.data.content)}
+							tags={(tagsByPost.get(post.data.id) ?? []).map((t) => t.label)}
 							edit={post.edit}
 							revealDelay={Math.min(i, 6) * 60}
+							level={2}
 						/>
 					))}
 				</div>
@@ -50,12 +57,12 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 			(cursor || nextCursor) && (
 				<nav class="pagination" aria-label="Pagination">
 					{cursor && (
-						<a href="/posts" class="btn btn-ghost">
+						<a href="/posts" class="btn">
 							← Newest
 						</a>
 					)}
 					{nextCursor && (
-						<a href={`/posts?cursor=${encodeURIComponent(nextCursor)}`} class="btn btn-ghost" rel="next">
+						<a href={`/posts?cursor=${encodeURIComponent(nextCursor)}`} class="btn" rel="next">
 							Older posts →
 						</a>
 					)}
@@ -64,17 +71,3 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 		}
 	</div>
 </Base>
-
-<style>
-	.posts-list {
-		display: grid;
-		gap: var(--space-4);
-	}
-
-	.pagination {
-		display: flex;
-		justify-content: space-between;
-		gap: var(--space-3);
-		margin-top: var(--space-6);
-	}
-</style>

@@ -1,0 +1,189 @@
+---
+import { site } from "../data/site";
+import { getProfile, safeExternalUrl, type SocialLink } from "../lib/profile";
+
+interface Props {
+	profile: Awaited<ReturnType<typeof getProfile>>["profile"];
+	socials: SocialLink[];
+}
+
+const { profile, socials } = Astro.props;
+const email = profile?.data.email;
+const hireUrl = safeExternalUrl(profile?.data.hire_url);
+
+// Social links from the Profile, then the Hire Me link, then the extras in site.ts.
+const channels: SocialLink[] = [
+	...socials,
+	...(hireUrl ? [{ label: "Hire me", href: hireUrl }] : []),
+	...site.contact.extraChannels,
+];
+const display = (href: string) => href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+---
+
+<section class="wrap uplink" id="contact" aria-labelledby="contact-title">
+	<div class="up-grid">
+		<div data-reveal>
+			<p class="k up-eyebrow">{site.contact.eyebrow}</p>
+			<h2 class="up-h" id="contact-title">
+				{
+					site.contact.title.map((line, i) => (
+						<>
+							{i > 0 && <br />}
+							{line}
+						</>
+					))
+				}
+			</h2>
+			<p class="up-sub">{site.contact.sub}</p>
+			{
+				email && (
+					<div class="mail-row">
+						<a class="mail" id="mail-text" href={`mailto:${email}`} {...profile?.edit.email}>
+							{email}
+						</a>
+						<button class="btn" type="button" data-copy-email={email}>
+							Copy
+						</button>
+					</div>
+				)
+			}
+		</div>
+		{
+			channels.length > 0 && (
+				<ul class="chan" data-reveal>
+					{channels.map((channel) => (
+						<li>
+							<a href={channel.href} target="_blank" rel="me noopener noreferrer">
+								<span class="cn">{channel.label}</span>
+								<span class="ch">{display(channel.href)}</span>
+								<span class="ar" aria-hidden="true">
+									↗
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			)
+		}
+	</div>
+</section>
+
+<style>
+	.uplink {
+		padding-block: clamp(90px, 12vw, 160px) clamp(60px, 8vw, 100px);
+	}
+
+	.up-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+		gap: 40px clamp(32px, 6vw, 96px);
+		align-items: end;
+	}
+
+	.up-eyebrow {
+		color: var(--kapton);
+	}
+
+	.up-h {
+		font-family: var(--f-display);
+		font-stretch: 125%;
+		--wdth: 125;
+		font-weight: 700;
+		font-size: clamp(44px, 7.4vw, 104px);
+		line-height: 0.9;
+		letter-spacing: -0.015em;
+		margin-top: 16px;
+		text-transform: uppercase;
+	}
+
+	.up-sub {
+		margin-top: 22px;
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-size: clamp(19px, 1.9vw, 22px);
+		color: var(--ink-2);
+		max-width: 40ch;
+		line-height: 1.4;
+	}
+
+	.mail-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 14px 18px;
+		margin-top: 34px;
+	}
+
+	.mail {
+		font-family: var(--f-display);
+		font-stretch: 108%;
+		--wdth: 108;
+		font-weight: 520;
+		font-size: clamp(20px, 3vw, 34px);
+		color: var(--ink);
+		border-bottom: 1px solid var(--kapton-line);
+		padding-bottom: 4px;
+		overflow-wrap: anywhere;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+
+	.mail:hover {
+		color: var(--kapton-2);
+		border-color: var(--kapton);
+	}
+
+	.chan {
+		list-style: none;
+		border-top: 1px solid var(--rule);
+	}
+
+	.chan a {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 4px 16px;
+		padding: 18px 0;
+		border-bottom: 1px solid var(--rule);
+		transition:
+			padding 0.25s,
+			background 0.25s;
+	}
+
+	.chan a:hover {
+		padding-left: 10px;
+		background: linear-gradient(90deg, var(--kapton-bg), transparent 70%);
+	}
+
+	.chan .cn {
+		font-family: var(--f-display);
+		font-stretch: 115%;
+		--wdth: 115;
+		font-weight: 620;
+		font-size: 20px;
+	}
+
+	.chan .ch {
+		grid-column: 1;
+		font-family: var(--f-mono);
+		font-size: 11px;
+		color: var(--dim);
+		letter-spacing: 0.04em;
+		overflow-wrap: anywhere;
+	}
+
+	.chan .ar {
+		grid-row: 1 / span 2;
+		grid-column: 2;
+		align-self: center;
+		font-family: var(--f-mono);
+		color: var(--kapton);
+		font-size: 16px;
+	}
+
+	@media (max-width: 860px) {
+		.up-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

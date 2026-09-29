@@ -1,0 +1,415 @@
+---
+/** CricStack sample: a T20 scorecard scored ball by ball. */
+---
+
+<div class="inst ticks" data-demo-cricstack>
+	<div class="inst-head"><span class="k">Live scorecard · 1st innings</span><span class="inst-tag">Sample match</span></div>
+	<div class="inst-body">
+		<div class="cric">
+			<div class="cric-top">
+				<div class="score" aria-live="off"><span data-c="runs">142</span><span class="sl">/</span><span data-c="wk">3</span></div>
+				<dl class="cric-meta">
+					<div><dt>Overs</dt><dd data-c="ov">17.4</dd></div>
+					<div><dt>Run rate</dt><dd data-c="rr">8.04</dd></div>
+					<div><dt>Format</dt><dd>T20</dd></div>
+				</dl>
+			</div>
+			<div>
+				<div class="manh-h"><span class="k">Runs per over</span><span class="k w">Wicket</span></div>
+				<div class="manh">
+					<div class="manh-y"><span style="bottom:25%">6</span><span style="bottom:50%">12</span><span style="bottom:75%">18</span></div>
+					<div class="manh-plot">
+						<div class="gl" style="bottom:25%"></div>
+						<div class="gl" style="bottom:50%"></div>
+						<div class="gl" style="bottom:75%"></div>
+						<div class="bars" data-c="bars"></div>
+					</div>
+				</div>
+				<div class="manh-x" data-c="x"></div>
+			</div>
+			<div class="over"><span class="k">This over</span><div class="balls" data-c="balls"></div></div>
+			<p class="comm" data-c="comm"><b>17.4</b>Two, pushed into the gap at cover.</p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { mount, reduceMotion } from "../../scripts/lifecycle";
+
+	const COMM: Record<string, string[]> = {
+		"•": ["No run, defended back to the bowler.", "Dot ball, beaten outside off."],
+		"1": ["Single, worked to mid-wicket.", "Quick single to point."],
+		"2": ["Two, pushed into the gap at cover.", "Two, driven wide of long-off."],
+		"4": ["Four, driven through extra cover.", "Four, pulled in front of square."],
+		"6": ["Six, lofted over long-on.", "Six, cleared deep mid-wicket."],
+		W: ["Wicket. Caught at deep square leg.", "Wicket. Bowled, middle stump."],
+		wd: ["Wide, down the leg side."],
+	};
+	const OUTCOMES: [string, number][] = [
+		["•", 30],
+		["1", 32],
+		["2", 12],
+		["4", 12],
+		["6", 6],
+		["W", 5],
+		["wd", 3],
+	];
+
+	function pick(): string {
+		let total = 0;
+		for (const [, w] of OUTCOMES) total += w;
+		let r = Math.random() * total;
+		for (const [o, w] of OUTCOMES) {
+			r -= w;
+			if (r < 0) return o;
+		}
+		return "•";
+	}
+
+	mount("[data-demo-cricstack]", (root) => {
+		const $ = (name: string) => root.querySelector<HTMLElement>(`[data-c="${name}"]`)!;
+		const barsEl = $("bars");
+		const commEl = $("comm");
+
+		// Completed overs (135 runs), wickets by over index, and the current over.
+		let overs = [6, 4, 9, 7, 3, 11, 8, 5, 6, 10, 7, 9, 12, 5, 8, 14, 11];
+		let wkOvers: Record<number, number> = { 4: 1, 8: 1, 13: 1 };
+		let cur = ["1", "•", "4", "2"];
+		let curRuns = 7;
+		let runs = 142;
+		let wk = 3;
+		let balls = 106;
+		let curWk = 0;
+
+		$("x").innerHTML = Array.from({ length: 20 }, (_, i) => `<span>${(i + 1) % 5 === 0 ? i + 1 : ""}</span>`).join("");
+
+		function renderBars() {
+			let h = "";
+			for (let i = 0; i < 20; i++) {
+				const isCur = i === overs.length;
+				const r = i < overs.length ? overs[i] : isCur ? curRuns : 0;
+				const w = i < overs.length ? wkOvers[i] || 0 : isCur ? curWk : 0;
+				const pct = Math.min(100, (r / 24) * 100);
+				h += `<div class="slot${isCur ? " cur" : ""}"><div class="b" style="height:${pct}%"></div>${w ? `<span class="wk" style="bottom:${pct}%"></span>` : ""}</div>`;
+			}
+			barsEl.innerHTML = h;
+		}
+		function renderBalls(fresh: boolean) {
+			$("balls").innerHTML = cur
+				.map((b, i) => {
+					const cls = b === "4" ? "b4" : b === "6" ? "b6" : b === "W" ? "bw" : b === "wd" ? "bx" : "";
+					return `<span class="ball ${cls}${fresh && i === cur.length - 1 ? " fresh" : ""}">${b}</span>`;
+				})
+				.join("");
+		}
+		function renderScore() {
+			$("runs").textContent = String(runs);
+			$("wk").textContent = String(wk);
+			$("ov").textContent = `${(balls / 6) | 0}.${balls % 6}`;
+			$("rr").textContent = balls ? (runs / (balls / 6)).toFixed(2) : "0.00";
+		}
+		function setComm(stamp: string, line: string) {
+			commEl.replaceChildren();
+			const b = document.createElement("b");
+			b.textContent = stamp;
+			commEl.append(b, line);
+		}
+
+		function ball() {
+			if (balls >= 120 || wk >= 10) {
+				overs = [];
+				wkOvers = {};
+				cur = [];
+				curRuns = 0;
+				curWk = 0;
+				runs = 0;
+				wk = 0;
+				balls = 0;
+				renderBars();
+				renderBalls(false);
+				renderScore();
+				setComm("0.0", "New innings. The chase begins.");
+				return;
+			}
+			if (cur.length && balls % 6 === 0 && cur.filter((b) => b !== "wd").length === 6) {
+				overs.push(curRuns);
+				if (curWk) wkOvers[overs.length - 1] = curWk;
+				cur = [];
+				curRuns = 0;
+				curWk = 0;
+			}
+			const o = pick();
+			cur.push(o);
+			if (o === "wd") {
+				runs += 1;
+				curRuns += 1;
+			} else {
+				balls++;
+				if (o === "W") {
+					wk++;
+					curWk++;
+				} else if (o !== "•") {
+					runs += Number(o);
+					curRuns += Number(o);
+				}
+			}
+			const lines = COMM[o];
+			let stamp = `${(balls / 6) | 0}.${balls % 6}`;
+			if (balls % 6 === 0 && o !== "wd") stamp = `${((balls - 1) / 6) | 0}.6`;
+			setComm(stamp, lines[(Math.random() * lines.length) | 0]);
+			renderBars();
+			renderBalls(true);
+			renderScore();
+		}
+
+		renderBars();
+		renderBalls(false);
+		renderScore();
+		if (reduceMotion) return;
+		const timer = window.setInterval(() => {
+			if (!document.hidden) ball();
+		}, 2600);
+		return () => clearInterval(timer);
+	});
+</script>
+
+<style is:global>
+	/* Global: bars and balls are created by the script. */
+	.cric {
+		display: grid;
+		gap: 18px;
+	}
+
+	.cric-top {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 12px 24px;
+	}
+
+	.score {
+		font-family: var(--f-display);
+		font-stretch: 125%;
+		--wdth: 125;
+		font-weight: 760;
+		font-size: clamp(46px, 6vw, 64px);
+		line-height: 0.9;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.01em;
+	}
+
+	.score .sl {
+		color: var(--dim);
+		font-weight: 400;
+		margin-inline: 2px;
+	}
+
+	.cric-meta {
+		display: flex;
+		gap: 22px;
+	}
+
+	.cric-meta dt {
+		font-family: var(--f-mono);
+		font-size: 9.5px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--dim);
+	}
+
+	.cric-meta dd {
+		margin-top: 4px;
+		font-family: var(--f-mono);
+		font-size: 14px;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.manh-h {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	.manh-h .w {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.manh-h .w::before {
+		content: "";
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--fault);
+	}
+
+	.manh {
+		display: grid;
+		grid-template-columns: 22px minmax(0, 1fr);
+		gap: 6px;
+	}
+
+	.manh-y {
+		position: relative;
+		height: 96px;
+		font-family: var(--f-mono);
+		font-size: 9px;
+		color: var(--dim);
+	}
+
+	.manh-y span {
+		position: absolute;
+		right: 0;
+		transform: translateY(50%);
+	}
+
+	.manh-plot {
+		position: relative;
+		height: 96px;
+		border-bottom: 1px solid var(--rule-2);
+	}
+
+	.manh-plot .gl {
+		position: absolute;
+		left: 0;
+		right: 0;
+		border-top: 1px dashed var(--rule);
+	}
+
+	.bars {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		gap: 3px;
+		align-items: flex-end;
+	}
+
+	.slot {
+		flex: 1;
+		height: 100%;
+		position: relative;
+		display: flex;
+		align-items: flex-end;
+	}
+
+	.slot .b {
+		width: 100%;
+		background: var(--bar);
+		transition: height 0.5s ease;
+	}
+
+	.slot.cur .b {
+		background: var(--kapton);
+	}
+
+	.slot .wk {
+		position: absolute;
+		left: 50%;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--fault);
+		transform: translate(-50%, -4px);
+	}
+
+	.manh-x {
+		display: flex;
+		gap: 3px;
+		margin-left: 28px;
+		margin-top: 5px;
+	}
+
+	.manh-x span {
+		flex: 1;
+		text-align: center;
+		font-family: var(--f-mono);
+		font-size: 9px;
+		color: var(--dim);
+		min-width: 0;
+	}
+
+	.over {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px 14px;
+	}
+
+	.balls {
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+
+	.ball {
+		width: 32px;
+		height: 32px;
+		display: grid;
+		place-items: center;
+		border: 1px solid var(--rule-2);
+		font-family: var(--f-mono);
+		font-size: 12px;
+		color: var(--ink-2);
+		border-radius: 50%;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.ball.b4 {
+		border-color: var(--kapton);
+		color: var(--kapton);
+	}
+
+	.ball.b6 {
+		background: var(--fill);
+		border-color: var(--fill);
+		color: var(--on-fill);
+		font-weight: 600;
+	}
+
+	.ball.bw {
+		border-color: var(--fault);
+		color: var(--fault);
+	}
+
+	.ball.bx {
+		font-size: 9.5px;
+		color: var(--dim);
+		border-style: dashed;
+	}
+
+	.ball.fresh {
+		animation: ball-pop 0.5s ease-out;
+	}
+
+	@keyframes ball-pop {
+		from {
+			transform: scale(0.6);
+			opacity: 0.2;
+		}
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	.comm {
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-size: 17px;
+		color: var(--ink-2);
+	}
+
+	.comm b {
+		font-style: normal;
+		font-family: var(--f-mono);
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--kapton);
+		margin-right: 8px;
+		font-variant-numeric: tabular-nums;
+	}
+</style>

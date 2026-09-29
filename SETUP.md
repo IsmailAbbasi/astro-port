@@ -24,7 +24,7 @@ Because content lives in a database, **writing a post or editing a project goes 
 
 | URL | Page |
 | --- | --- |
-| `/` | Hero (greeting, bio, Download CV, Hire Me, socials) → Latest Posts → Selected Projects → Tech Stack |
+| `/` | Hero (name, intro, Download CV, Copy email, socials, live globe) → stat tiles → Work → Projects (with live demo panels) → Writing (latest posts) → Stack → Contact |
 | `/posts` | All blog posts |
 | `/posts/<slug>` | A blog post, with a reading progress bar |
 | `/projects` | All projects |
@@ -97,14 +97,16 @@ Admin sidebar → **Profile** → open the single entry → edit → **Publish**
 
 | Field | Where it shows |
 | --- | --- |
-| **Name** | "Hi, I'm **Name** 👋" |
-| **Role** | Line under the greeting, plus the default page description |
-| **Email** | Navbar (top left) and the default target of **Hire Me** |
-| **Bio** | Hero paragraph. **Bold text is highlighted in the amber accent colour**, so bold your role and key technologies |
-| **Available for work** | Shows the green "Available for work" badge |
+| **Name** | The big name in the hero and the top bar. With three or more words, the first ones sit small above the last two (e.g. `Mohd Ismail Abbasi`) |
+| **Role** | Amber label above the name, plus the default page description |
+| **Email** | The contact section and the **Copy email** buttons |
+| **Bio** | The large italic intro under the name. Keep it to one or two sentences. **Bold text is highlighted in amber**, e.g. bold "satellite telemetry", "payments" and "ball-by-ball cricket" |
+| **Available for work** | Shows a green "Open to work" label in the hero |
 | **CV (PDF)** | The **Download CV** button. Upload your PDF here |
-| **Hire Me link** | Optional (e.g. a Cal.com or contact-form URL). If empty, Hire Me opens an email to you |
-| **X / Bento / GitHub / LinkedIn URLs** | Social links under the buttons (empty ones are hidden). Paste full URLs, e.g. `https://x.com/yourhandle` |
+| **Hire Me link** | Optional (e.g. a Cal.com or contact-form URL). Adds a "Hire me" row to the contact section |
+| **X / Bento / GitHub / LinkedIn URLs** | Links in the hero and the contact section (empty ones are hidden). Paste full URLs, e.g. `https://x.com/yourhandle` |
+
+The rest of the home page copy (work history, the four stat tiles, the "Now" line, section titles, project bullet points and spec rows) isn't in the CMS. Edit it in [`src/data/site.ts`](src/data/site.ts).
 
 Keep exactly **one** published Profile entry.
 
@@ -124,23 +126,23 @@ Sidebar → **Posts** → **New**.
 
 Sidebar → **Projects** → **New**.
 
-- **Title**, **Short description** (shown in the row), **Year**, **Live URL**, **GitHub URL**.
-- **Technologies**: pick terms (React, Astro, …) from the taxonomy panel. They show as `React • Astro` in the row. Add new ones under the **Technologies** taxonomy.
-- **Show on home page**: untick to hide a project from "Selected Projects" (it still shows on `/projects`).
+- **Title**, **Short description** (the italic line under the name), **Year**, **Live URL**, **GitHub URL**.
+- **Technologies**: pick terms (React, Astro, …) from the taxonomy panel. They show as `React · Astro` under the project. Add new ones under the **Technologies** taxonomy.
+- **Show on home page**: untick to hide a project from the home page (it still shows on `/projects`).
+- **Cover image** (optional): shown in a panel next to the project when it has no live demo.
 - **Case study** (optional): the body of `/projects/<slug>`.
-- In a row, the **↗** icon opens the live URL and the GitHub icon opens the repo. Clicking anywhere else opens the case study page.
+- **Live demo panels**: projects titled **Intercept API**, **ExaminateAI** and **CricStack** (or with those slugs) get the matching live sample, bullet points and spec rows from [`src/data/site.ts`](src/data/site.ts). Case, spaces and dashes are ignored when matching.
 
 ### 4.4 Tech Stack
 
 Sidebar → **Tech Stack** → **New**.
 
-- **Name** and **Category** (Frontend / Backend / Database / DevOps / Tools). Badges are grouped into bento cards by category.
-- **Simple Icons slug**: the icon comes from [simpleicons.org](https://simpleicons.org). Search a brand there and use its slug (e.g. `react`, `nodedotjs`, `nextdotjs`, `tailwindcss`). If the slug doesn't exist, the badge just shows the name.
-- **Custom icon** (optional): upload an image to use instead of Simple Icons.
+- **Name** and **Category** (Frontend / Backend / Database / DevOps / Tools). Each category is one row of the "What I build with" table. The row names and "Used for" text (Frontend → "Interfaces", …) are set in [`src/data/site.ts`](src/data/site.ts), which also adds an "AI" row.
+- **Simple Icons slug** and **Custom icon** are not shown in the current design (the table lists names only).
 
 ### 4.5 Navigation, settings and SEO
 
-- **Menus → Primary Navigation**: the links on the right of the navbar (seeded with Home / Posts). Add `/projects` if you want it in the nav.
+- **Menus → Primary Navigation**: the top bar always shows Work, Projects, Blog, Stack and Contact. Other items you add here (anything except `/` and `/posts`) appear before Contact.
 - **Settings → General**: site title (used in browser tabs), tagline, logo, **favicon**. The repo ships a fallback at `public/favicon.svg`.
 - **Settings → SEO**: title separator, default social share image, search-engine verification, `robots.txt` content.
 - Each post and project has an **SEO panel** for a custom title, description and share image.
@@ -234,19 +236,31 @@ astro-port/
 ├── seed/seed.json          Schema + sample content (first run only)
 ├── emdash-env.d.ts         Collection types (regenerated by `pnpm dev`)
 ├── worker-configuration.d.ts  Cloudflare binding types (`pnpm cf-typegen`)
+├── Ismail Abbasi (1).html  The design reference. Keep it: the globe reads its map dots from it
 ├── public/
 │   └── favicon.svg         Fallback favicon (put cv.pdf here if not using the admin upload)
 └── src/
     ├── worker.ts           Worker entry (EmDash handler + scheduled jobs)
     ├── live.config.ts      EmDash loader registration (boilerplate)
-    ├── layouts/Base.astro  <head>, EmDash hooks, navbar, footer, scroll-reveal script
+    ├── layouts/Base.astro  <head>, theme script, EmDash hooks, top bar, footer, toast, scroll reveal
     ├── components/
-    │   ├── Navbar.astro    Email left, menu links right
-    │   ├── Hero.astro      Greeting, bio, Download CV / Hire Me, socials
-    │   ├── BlogCard.astro  Post card (title, date, excerpt)
-    │   ├── ProjectRow.astro  Project row (name, tech, ↗ / GitHub links)
-    │   ├── TechBadge.astro Pill badge with icon
+    │   ├── Navbar.astro    Top bar: call sign, links, AOS/LOS light, clock, theme toggle, mobile menu
+    │   ├── ThemeToggle.astro  Light/dark button
+    │   ├── Hero.astro      Name, intro, Download CV / Copy email, socials, globe
+    │   ├── Globe.astro     The live orbit globe
+    │   ├── StatStrip.astro The four tiles under the hero
+    │   ├── WorkLog.astro   Work history
+    │   ├── ProjectPayload.astro  A project on the home page, with its demo or cover
+    │   ├── demos/          Live sample panels: Intercept API, ExaminateAI, CricStack
+    │   ├── BlogCard.astro  A post in a list
+    │   ├── ProjectRow.astro  A project on /projects
+    │   ├── StackTable.astro  "What I build with" table
+    │   ├── Contact.astro   Email and channels
+    │   ├── SectionHead.astro  Eyebrow + title + intro used by every section
+    │   ├── TechBadge.astro No longer used by the design; safe to delete
     │   └── Footer.astro
+    ├── data/site.ts        Home page copy the CMS has no fields for
+    ├── scripts/            Globe, orbit model, theme, mount() lifecycle helper
     ├── pages/
     │   ├── index.astro     Home
     │   ├── posts/index.astro, posts/[slug].astro
@@ -256,7 +270,7 @@ astro-port/
     ├── lib/
     │   ├── profile.ts      Profile query, CV URL, social links, safe URLs
     │   └── format.ts       Dates and reading time
-    └── styles/global.css   Design tokens + global styles
+    └── styles/global.css   Design tokens (dark + light) + shared styles
 ```
 
 Also included for AI coding tools on your PC: `AGENTS.md`, EmDash agent skills in `.agents/skills/` (linked as `.claude/skills`), and `.mcp.json` / `.vscode/mcp.json` / `.cursor/mcp.json`, which connect Claude Code, VS Code and Cursor to the EmDash docs server.
@@ -265,12 +279,16 @@ Also included for AI coding tools on your PC: `AGENTS.md`, EmDash agent skills i
 
 ## 7. Customising the design
 
-- **Colours, spacing, radius, type scale:** the `:root` block at the top of [`src/styles/global.css`](src/styles/global.css). The palette is the one from the plan (deep dark background, amber accent `hsl(35, 95%, 55%)`).
-- **Fonts:** `fonts` in [`astro.config.mjs`](astro.config.mjs). Currently **Plus Jakarta Sans** (text) and **JetBrains Mono** (tech labels, code). Swap `name:` for any Google Font and keep the `cssVariable`.
+The design comes from `Ismail Abbasi (1).html`: a dark "mission control" look with an amber accent, plus a light theme.
+
+- **Colours:** the tokens at the top of [`src/styles/global.css`](src/styles/global.css). `:root` is the dark theme, `:root[data-theme="light"]` the light one. Change both when you change a colour. In light mode the amber and green are darker so small text stays readable.
+- **Theme toggle:** the button in the top bar. Visitors start on their OS setting; a click is remembered in their browser.
+- **Fonts:** `fonts` in [`astro.config.mjs`](astro.config.mjs): **Archivo** (text and wide headings), **Martian Mono** (labels) and **Newsreader** (italic intros). The headings use Archivo's width axis (`font-stretch: 125%`).
+- **Home page copy:** [`src/data/site.ts`](src/data/site.ts).
 - **Animations:**
   - Scroll reveal: add `data-reveal` to any element (optionally `style="--reveal-delay: 120ms"`).
-  - Page transitions: the `@view-transition` rule in `global.css`.
-  - Everything respects the OS "reduce motion" setting.
+  - Page transitions: the `@view-transition` rule in `global.css`, plus Astro's ClientRouter for logged-out visitors.
+  - The globe and demos pause off screen, and everything respects the OS "reduce motion" setting.
 - **Home page section order:** [`src/pages/index.astro`](src/pages/index.astro).
 
 ### Adding a field to the CMS

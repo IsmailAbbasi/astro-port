@@ -1,0 +1,202 @@
+---
+import type { EditProxy } from "emdash";
+import { Image } from "emdash/ui";
+import type { Project } from "../../emdash-env";
+import type { ProjectExtras } from "../data/site";
+import { safeExternalUrl } from "../lib/profile";
+import CricStackDemo from "./demos/CricStackDemo.astro";
+import ExaminateDemo from "./demos/ExaminateDemo.astro";
+import InterceptDemo from "./demos/InterceptDemo.astro";
+
+/** One project on the home page: copy on the left, a live sample or cover on the right. */
+interface Props {
+	index: number;
+	title: string;
+	href: string;
+	summary?: string;
+	year?: string;
+	technologies?: string[];
+	liveUrl?: string;
+	githubUrl?: string;
+	image?: Project["featured_image"];
+	extras?: ProjectExtras;
+	edit?: EditProxy;
+}
+
+const { index, title, href, summary, year, technologies = [], liveUrl, githubUrl, image, extras, edit } = Astro.props;
+
+const live = safeExternalUrl(liveUrl);
+const github = safeExternalUrl(githubUrl);
+const liveLabel = live ? new URL(live).host.replace(/^www\./, "") : undefined;
+const id = `PL-${String(index + 1).padStart(2, "0")}`;
+const category = extras?.category ?? year;
+const DEMOS = { intercept: InterceptDemo, examinate: ExaminateDemo, cricstack: CricStackDemo };
+const Demo = extras?.demo ? DEMOS[extras.demo] : undefined;
+const hasPanel = Boolean(Demo || image);
+---
+
+<article class:list={["payload", { "no-panel": !hasPanel }]} data-reveal>
+	<div class="pl-copy">
+		<p class="pl-id">{id}{category && <span> · {category}</span>}</p>
+		<h3 class="pl-name" {...edit?.title}>{title}</h3>
+		{
+			summary && (
+				<p class="pl-mission" {...edit?.summary}>
+					{summary}
+				</p>
+			)
+		}
+		{
+			extras?.points && extras.points.length > 0 && (
+				<ul class="plist">
+					{extras.points.map((point) => (
+						<li>{point}</li>
+					))}
+				</ul>
+			)
+		}
+		{technologies.length > 0 && <p class="stackline">{technologies.join(" · ")}</p>}
+		<div class="pl-links">
+			{
+				live && (
+					<a href={live} target="_blank" rel="noopener noreferrer">
+						{liveLabel} ↗
+					</a>
+				)
+			}
+			{
+				github && (
+					<a href={github} target="_blank" rel="noopener noreferrer">
+						Source ↗
+					</a>
+				)
+			}
+			<a href={href}>Case study →</a>
+		</div>
+	</div>
+
+	{
+		hasPanel && (
+			<div class="pl-inst">
+				{Demo ? (
+					<Demo />
+				) : (
+					image && (
+						<div class="inst ticks">
+							<div class="inst-head">
+								<span class="k">{title}</span>
+								{year && <span class="inst-tag">{year}</span>}
+							</div>
+							<div class="pl-cover" {...edit?.featured_image}>
+								<Image image={image} />
+							</div>
+						</div>
+					)
+				)}
+				{extras?.specs && extras.specs.length > 0 && (
+					<dl class="spec">
+						{extras.specs.map(([label, value]) => (
+							<div>
+								<dt>{label}</dt>
+								<dd>{value}</dd>
+							</div>
+						))}
+					</dl>
+				)}
+			</div>
+		)
+	}
+</article>
+
+<style>
+	.payload {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		gap: 32px clamp(32px, 5vw, 72px);
+		padding-block: clamp(40px, 6vw, 72px);
+		border-top: 1px solid var(--rule);
+		align-items: start;
+	}
+
+	.payload:last-child {
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.payload.no-panel {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.pl-id {
+		font-family: var(--f-mono);
+		font-size: 10.5px;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--kapton);
+	}
+
+	.pl-id span {
+		color: var(--dim);
+	}
+
+	.pl-name {
+		font-family: var(--f-display);
+		font-stretch: 125%;
+		--wdth: 125;
+		font-weight: 720;
+		font-size: clamp(34px, 4.1vw, 54px);
+		line-height: 1;
+		margin-top: 14px;
+		letter-spacing: -0.012em;
+	}
+
+	.pl-mission {
+		font-family: var(--f-serif);
+		font-style: italic;
+		font-weight: 360;
+		font-size: clamp(20px, 1.9vw, 23px);
+		line-height: 1.3;
+		color: var(--ink);
+		max-width: 32ch;
+		margin-top: 16px;
+	}
+
+	.no-panel .pl-mission {
+		max-width: 48ch;
+	}
+
+	.pl-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px 22px;
+		margin-top: 24px;
+	}
+
+	.pl-links a {
+		font-family: var(--f-mono);
+		font-size: 11.5px;
+		letter-spacing: 0.06em;
+		color: var(--kapton);
+		border-bottom: 1px solid var(--kapton-line);
+		padding-bottom: 3px;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+
+	.pl-links a:hover {
+		color: var(--kapton-2);
+		border-color: var(--kapton-2);
+	}
+
+	.pl-cover :global(img) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	@media (max-width: 960px) {
+		.payload {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
