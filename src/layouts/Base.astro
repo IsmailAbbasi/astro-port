@@ -84,7 +84,7 @@ const isLoggedIn = Boolean(Astro.locals.user);
 		<script is:inline>
 			document.documentElement.classList.add("js");
 		</script>
-		{ !isLoggedIn && <ClientRouter /> }
+		{ !isLoggedIn && <ClientRouter prefetch="viewport" /> }
 		<EmDashHead page={pageCtx} />
 		<Font cssVariable="--font-sans" preload />
 		<Font cssVariable="--font-mono" />

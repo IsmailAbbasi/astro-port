@@ -8,7 +8,7 @@
 	],
 	// Environment variables
 	"vars": {
-		"EMDASH_SITE_URL": "https://astro-port.ismailabbasi118.workers.dev"
+		"EMDASH_SITE_URL": "https://ismailabbasi.in"
 	},
 	// Created automatically on the first `wrangler deploy` if they don't exist yet.
 	"d1_databases": [
@@ -36,7 +36,7 @@
 	// Scheduled publishing + general maintenance
 	"triggers": {
 		"crons": [
-			"* * * * *"
+			"0 0 * * *"
 		],
 	},
 	// Custom domain: uncomment after the first deploy works on *.workers.dev
